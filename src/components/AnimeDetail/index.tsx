@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Anime } from '@/types/anime';
+import { getAnimeFact } from '@/lib/fact-service';
 import DetailHeader from './DetailHeader';
 import DetailSidebar from './DetailSidebar';
 import DetailContent from './DetailContent';
+import DetailFacts from './DetailFacts';
 
 interface AnimeDetailProps {
   anime: Anime;
@@ -12,8 +14,20 @@ interface AnimeDetailProps {
 }
 
 export default function AnimeDetail({ anime, onClose }: AnimeDetailProps) {
+  const [facts, setFacts] = useState<any[]>([]);
   const genres = anime.genres || [];
   const studios = anime.studios || [];
+
+  useEffect(() => {
+    const loadFacts = async () => {
+      // Mengambil fakta berdasarkan judul anime
+      const data = await getAnimeFact(anime.title);
+      if (data && data.fact) {
+        setFacts(data.fact);
+      }
+    };
+    loadFacts();
+  }, [anime.title]);
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#060910] overflow-y-auto animate-in fade-in duration-300">
@@ -30,17 +44,22 @@ export default function AnimeDetail({ anime, onClose }: AnimeDetailProps) {
             score={anime.score} 
           />
           
-          <DetailContent 
-            title={anime.title}
-            genres={genres}
-            synopsis={anime.synopsis}
-            meta={{
-              status: anime.status || 'Active',
-              type: anime.type || 'Media',
-              rating: anime.rating || 'G',
-              studio: studios[0]?.name || 'Global Provider'
-            }}
-          />
+          <div className="flex-1">
+            <DetailContent 
+              title={anime.title}
+              genres={genres}
+              synopsis={anime.synopsis}
+              meta={{
+                status: anime.status || 'Active',
+                type: anime.type || 'Media',
+                rating: anime.rating || 'G',
+                studio: studios[0]?.name || 'Kodel Provider'
+              }}
+            />
+            
+            {/* Menampilkan Fakta Anime secara otomatis */}
+            <DetailFacts facts={facts} />
+          </div>
         </div>
       </div>
     </div>
