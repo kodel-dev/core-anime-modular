@@ -1,35 +1,24 @@
-export const getWaifuGallery = async (type: 'waifu' | 'nekos' = 'waifu') => {
-  const providers = type === 'waifu' ? [
-    { name: 'im', url: 'https://api.waifu.im/search?included_tags=waifu&limit=32' },
-    { name: 'pics', url: 'https://api.waifu.pics/sfw/waifu' }
-  ] : [
-    { name: 'nekos', url: 'https://nekos.best/api/v2/neko?amount=20' }
-  ];
+export const getWaifuGallery = async () => {
+  try {
+    // Kodel Engine: Meminta banyak gambar (type: 'sfw', category: 'waifu')
+    // Menggunakan POST karena API waifu.pics/many memerlukan body JSON
+    const res = await fetch('https://api.waifu.pics/many/sfw/waifu', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}), // Body kosong akan memberikan daftar gambar acak
+    });
 
-  for (const provider of providers) {
-    try {
-      const res = await fetch(provider.url);
-      if (res.ok) {
-        const data = await res.json();
-        if (provider.name === 'im') {
-          return data.images.map((img: any) => ({ 
-            id: img.image_id, 
-            url: img.url, 
-            tags: img.tags.map((t: any) => t.name) 
-          }));
-        }
-        if (provider.name === 'nekos') {
-          return data.results.map((img: any, index: number) => ({ 
-            id: `neko-${index}-${Date.now()}`, 
-            url: img.url, 
-            tags: ['neko'] 
-          }));
-        }
-        return [{ id: Date.now(), url: data.url, tags: [type] }];
-      }
-    } catch (e) {
-      console.warn(`Kodel Provider ${provider.name} failed`);
-    }
+    if (!res.ok) return [];
+    
+    const json = await res.json();
+    return json.files.map((url: string, index: number) => ({
+      id: `waifu-${index}`,
+      url: url
+    }));
+  } catch (error) {
+    console.error("Kodel Gallery Error:", error);
+    return [];
   }
-  return [];
 };

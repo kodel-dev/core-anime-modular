@@ -1,19 +1,24 @@
 export const getNekoGallery = async () => {
   try {
-    // Mengambil 20 gambar sekaligus agar konten terlihat banyak
-    const res = await fetch('https://nekos.best/api/v2/neko?amount=20');
-    if (!res.ok) throw new Error('Kodel Engine: Neko API Error');
+    // Kodel Engine: Mengambil koleksi gambar Neko (sfw)
+    const res = await fetch('https://api.waifu.pics/many/sfw/neko', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}), // Body kosong untuk mendapatkan list acak
+    });
+
+    if (!res.ok) return [];
     
-    const data = await res.json();
-    
-    // Normalisasi data agar sesuai dengan format WaifuCard
-    return data.results.map((img: any, index: number) => ({
-      id: `neko-${index}-${Date.now()}`,
-      url: img.url,
-      tags: ['neko', img.artist_name || 'artist']
+    const json = await res.json();
+    // Transformasi data agar sesuai dengan format komponen Card
+    return json.files.map((url: string, index: number) => ({
+      id: `neko-${index}`,
+      url: url
     }));
   } catch (error) {
-    console.error("Neko Service Error:", error);
+    console.error("Kodel Neko Sector Error:", error);
     return [];
   }
 };
