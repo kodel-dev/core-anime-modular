@@ -5,32 +5,33 @@ import { Anime } from '@/types/anime';
 
 interface AnimeCardProps {
   anime: Anime;
-  onWatch?: (id: number) => void;
+  onWatch: (anime: Anime) => void;
 }
 
 export default function AnimeCard({ anime, onWatch }: AnimeCardProps) {
   return (
-    <div className="group bg-gray-900/50 rounded-2xl overflow-hidden border border-gray-800 hover:border-blue-500/50 transition-all duration-500">
-      <div className="relative aspect-[3/4] overflow-hidden">
+    <div 
+      onClick={() => onWatch(anime)}
+      className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gray-900 border border-white/5 transition-all hover:border-blue-500/50 shadow-lg"
+    >
+      <div className="aspect-[3/4] overflow-hidden">
         <img 
           src={anime.images.jpg.large_image_url} 
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
           alt={anime.title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-[10px] font-black text-yellow-500">
-          ⭐ {anime.score || 'N/A'}
+      </div>
+      
+      {/* Overlay Information */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#060910] via-[#060910]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+        <h3 className="text-sm font-bold text-white line-clamp-2 mb-1">{anime.title}</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">View Details</span>
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="text-xs font-bold text-gray-200 line-clamp-2 mb-3 h-8 uppercase tracking-tight">
-          {anime.title}
-        </h3>
-        <button 
-          onClick={() => onWatch?.(anime.mal_id)}
-          className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
-        >
-          Details
-        </button>
+      
+      <div className="p-3">
+        <h3 className="text-xs font-medium text-gray-300 truncate">{anime.title}</h3>
       </div>
     </div>
   );

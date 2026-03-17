@@ -1,24 +1,24 @@
-export const getWaifuGallery = async () => {
+export const getWaifuGallery = async (category: string = 'waifu') => {
   try {
-    // Kodel Engine: Meminta banyak gambar (type: 'sfw', category: 'waifu')
-    // Menggunakan POST karena API waifu.pics/many memerlukan body JSON
-    const res = await fetch('https://api.waifu.pics/many/sfw/waifu', {
+    // Kodel Engine: Meminta koleksi berdasarkan kategori spesifik
+    const res = await fetch(`https://api.waifu.pics/many/sfw/${category}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}), // Body kosong akan memberikan daftar gambar acak
+      body: JSON.stringify({}), 
     });
 
     if (!res.ok) return [];
     
     const json = await res.json();
     return json.files.map((url: string, index: number) => ({
-      id: `waifu-${index}`,
-      url: url
+      id: `${category}-${index}-${Date.now()}`,
+      url: url,
+      category: category
     }));
   } catch (error) {
-    console.error("Kodel Gallery Error:", error);
+    console.error("Gallery Service Error:", error);
     return [];
   }
 };

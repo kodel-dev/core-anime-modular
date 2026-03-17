@@ -1,27 +1,28 @@
-import { JikanResponse } from '@/types/anime';
-
-const JIKAN_BASE = 'https://api.jikan.moe/v4';
-
-export const fetchAnimeData = async (type: string, query: string = ''): Promise<JikanResponse> => {
-  // Menambah limit menjadi 25 agar konten lebih padat
-  let url = `${JIKAN_BASE}/top/anime?filter=bypopularity&limit=25`;
-
-  if (query) {
-    url = `${JIKAN_BASE}/anime?q=${encodeURIComponent(query)}&order_by=popularity&limit=25`;
-  } else {
-    switch (type) {
-      case 'on-going': url = `${JIKAN_BASE}/seasons/now?limit=25`; break;
-      case 'ghibli': url = `${JIKAN_BASE}/anime?producers=21&order_by=score&sort=desc`; break;
-      default: url = `${JIKAN_BASE}/top/anime?filter=bypopularity&limit=25`;
-    }
-  }
-
+export const fetchAnimeData = async (type: string, params?: { q?: string; status?: string; season?: string; year?: string; genres?: string; page?: number }) => {
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`ERR:KODEL: Status ${response.status}`);
-    return await response.json();
+    const queryParams = new URLSearchParams();
+    
+    // Tambahkan parameter page ke query string
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.q) queryParams.append('q', params.q);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.season) queryParams.append('season', params.season);
+    if (params?.year) queryParams.append('year', params.year);
+    if (params?.genres) queryParams.append('genres', params.genres);
+    
+    // Gunakan endpoint anime jika ada keyword 'q', jika tidak gunakan top
+    let endpoint = params?.q 
+      ? 'https://api.jikan.moe/v4/anime' 
+      : 'https://api.jikan.moe/v4/top/anime';
+
+    if (params?.season && params?.year) {
+      endpoint = `https://api.jikan.moe/v4/seasons/${params.year}/${params.season}`;
+    }
+
+    const res = await fetch(`${endpoint}?${queryParams.toString()}`);
+    return await res.json();
   } catch (error) {
-    console.error("Anime Fetch Error:", error);
+    console.error("Core Service Error:", error);
     return { data: [] };
   }
 };
