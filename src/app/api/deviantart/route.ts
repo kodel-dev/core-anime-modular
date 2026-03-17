@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server'; // ✅ Import ini yang hilang
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-// ✅ Fungsi ini harus ada di file yang SAMA
-let cachedToken: string | null = null;
-let tokenExpiry = 0;
+// ✅ Cache untuk Client Credentials (Tetap ada sebagai fallback)
+let cachedClientToken: string | null = null;
+let clientTokenExpiry = 0;
 
-async function getDeviantArtToken() {
-  if (cachedToken && Date.now() < tokenExpiry) {
-    return cachedToken;
+async function getClientCredentialsToken() {
+  if (cachedClientToken && Date.now() < clientTokenExpiry) {
+    return cachedClientToken;
   }
 
   const clientId = process.env.DEVIANTART_CLIENT_ID;
@@ -26,13 +27,13 @@ async function getDeviantArtToken() {
     }),
   });
 
-  if (!response.ok) throw new Error('Gagal mengambil token DeviantArt');
+  if (!response.ok) throw new Error('Gagal mengambil Client Token');
 
   const data = await response.json();
-  cachedToken = data.access_token;
-  tokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  cachedClientToken = data.access_token;
+  clientTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
 
-  return cachedToken;
+  return cachedClientToken;
 }
 
 export async function GET(request: Request) {
@@ -42,12 +43,19 @@ export async function GET(request: Request) {
     const offset = searchParams.get('offset') || '0';
     const nsfw = searchParams.get('nsfw') === 'true';
 
-    const token = await getDeviantArtToken();
+    // ✅ AMBIL TOKEN DARI LOGIN USER (Jika ada di Cookie)
+    const cookieStore = await cookies();
+    const userToken = (await cookieStore).get('da_access_token')?.value;
+
+    // Gunakan userToken jika tersedia agar konten mature (NSFW) bisa terbuka
+    const token = userToken || await getClientCredentialsToken();
 
     const daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/tags');
     daUrl.searchParams.set('tag', tag);
     daUrl.searchParams.set('offset', offset);
     daUrl.searchParams.set('limit', '24');
+    
+    // ✅ Parameter wajib untuk membuka konten dewasa
     daUrl.searchParams.set('mature_content', String(nsfw));
 
     const res = await fetch(daUrl.toString(), {
@@ -58,7 +66,10 @@ export async function GET(request: Request) {
       const errorBody = await res.text();
       console.error(`DeviantArt ${res.status}:`, errorBody);
       return NextResponse.json(
-        { error: `DeviantArt API Error: ${res.status}`, detail: errorBody },
+        { 
+          error: `DeviantArt API Error: ${res.status}`, 
+          detail: userToken ? "Token expired atau izin ditolak" : "Wajib Login untuk konten NSFW" 
+        },
         { status: res.status }
       );
     }
@@ -67,11 +78,15 @@ export async function GET(request: Request) {
 
     const formattedResults = (data.results || [])
       .map((item: any) => {
+        // ✅ SOLUSI AGAR TIDAK BLUR: 
+        // Utamakan content.src (resolusi asli) atau preview.src daripada thumbs
         const imageUrl =
           item.content?.src ||
           item.preview?.src ||
           item.thumbs?.[0]?.src;
+
         if (!imageUrl) return null;
+
         return {
           id: item.deviationid,
           url: imageUrl,
@@ -84,6 +99,7 @@ export async function GET(request: Request) {
       items: formattedResults,
       nextOffset: data.next_offset ?? null,
       hasMore: data.has_more ?? false,
+      isUserLoggedIn: !!userToken // Info tambahan untuk UI
     });
 
   } catch (error: any) {
