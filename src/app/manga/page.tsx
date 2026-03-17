@@ -63,7 +63,7 @@ export default function MangaDiscoveryPage() {
     }, 500);
     
     return () => clearTimeout(debounceTimer);
-  }, [searchQuery]);
+  }, [searchQuery, fetchMangaData]);
 
   return (
     <div className="min-h-screen bg-[#060910] text-white flex flex-col overflow-x-hidden">
@@ -76,10 +76,10 @@ export default function MangaDiscoveryPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-1 w-8 bg-indigo-500 rounded-full" />
-              <span className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Digital Collection</span>
+              <span className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Koleksi Bacaan</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter">
-              Manga <span className="text-indigo-500">Repository</span>
+              Pojok <span className="text-indigo-500">Manga</span>
             </h2>
           </div>
 
@@ -88,8 +88,8 @@ export default function MangaDiscoveryPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari berdasarkan judul manga..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-gray-600 shadow-inner"
+              placeholder="Mau baca manga apa hari ini? Cari di sini..."
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-gray-500 shadow-inner"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,8 @@ export default function MangaDiscoveryPage() {
           </div>
         ) : (
           <div className="py-32 text-center border border-dashed border-white/5 rounded-[2.5rem]">
-            <p className="text-gray-500 font-medium italic text-sm">Maaf, entri manga tidak ditemukan dalam database kami.</p>
+            <span className="text-4xl mb-3 block">🤔</span>
+            <p className="text-gray-400 font-medium text-sm">Wah, manga yang kamu cari belum ketemu nih. Coba cari judul lain, ya!</p>
           </div>
         )}
 
@@ -127,9 +128,14 @@ export default function MangaDiscoveryPage() {
                 fetchMangaData(true);
               }}
               disabled={loadingMore}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-50 active:scale-95"
+              className="bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-50 active:scale-95 flex items-center gap-2"
             >
-              {loadingMore ? 'Memproses...' : 'Tampilkan Lebih Banyak'}
+              {loadingMore ? (
+                <>
+                  <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Tunggu sebentar...
+                </>
+              ) : 'Muat Manga Lainnya'}
             </button>
           </div>
         )}

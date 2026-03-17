@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 const SECTORS = [
@@ -33,18 +34,18 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
 
         {/* ── Logo ── */}
-        <Link href="/" className="group flex items-center gap-2.5 shrink-0">
-          <div
-            className="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl
-                       bg-blue-600 flex items-center justify-center
-                       font-black text-[13px] text-white
-                       shadow-[0_0_18px_rgba(37,99,235,0.45)]
-                       group-hover:scale-110 group-hover:shadow-[0_0_24px_rgba(37,99,235,0.65)]
-                       transition-all duration-200"
-          >
-            C
+        <Link href="/" className="group flex items-center gap-3 shrink-0">
+          {/* Kontainer logo dibuat bulat dengan rounded-full dan overflow-hidden */}
+          <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(37,99,235,0.45)] group-hover:shadow-[0_0_25px_rgba(37,99,235,0.7)] ring-1 ring-white/10 group-hover:ring-blue-500/50">
+            <Image 
+              src="/logo.png" 
+              alt="CoreAnime Logo" 
+              fill
+              sizes="(max-width: 768px) 40px, 48px"
+              className="object-cover transition-all duration-300"
+            />
           </div>
-          <span className="hidden sm:block text-[15px] md:text-[17px] font-black italic uppercase tracking-tight text-white leading-none">
+          <span className="hidden sm:block text-[16px] md:text-[19px] font-black italic uppercase tracking-tight text-white leading-none">
             Core<span className="text-blue-500">Anime</span>
           </span>
         </Link>
@@ -60,7 +61,7 @@ export default function Navbar() {
                 className={`relative px-3 md:px-4 py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-[0.18em] md:tracking-[0.22em] whitespace-nowrap transition-all duration-200 ${
                   active
                     ? 'text-blue-400 bg-blue-600/10'
-                    : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.05]'
+                    : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
                 }`}
               >
                 {s.label}

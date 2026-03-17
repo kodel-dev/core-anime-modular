@@ -5,13 +5,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'cdn.myanimelist.net',
-        port: '',
-        pathname: '/**',
+        hostname: '**', // Mengizinkan semua domain HTTPS
       },
     ],
   },
-  /* Opsi konfigurasi tambahan di sini */
 };
 
 export default nextConfig;

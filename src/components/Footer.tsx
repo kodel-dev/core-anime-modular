@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,11 +12,18 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
           
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center font-black text-white shadow-[0_0_30px_rgba(79,70,229,0.3)]">
-                C
+            <div className="flex items-center gap-3 mb-8 group cursor-pointer w-fit">
+              {/* Wadah Logo Footer - Dibuat bulat menyesuaikan Navbar */}
+              <div className="relative w-12 h-12 rounded-full overflow-hidden shadow-[0_0_30px_rgba(79,70,229,0.3)] ring-1 ring-white/10 group-hover:ring-indigo-500/50 transition-all duration-300 group-hover:scale-105 shrink-0">
+                <Image 
+                  src="/logo.png" 
+                  alt="CoreAnime Logo" 
+                  fill
+                  sizes="48px"
+                  className="object-cover transition-all duration-300"
+                />
               </div>
-              <h2 className="text-2xl font-black uppercase tracking-tighter italic text-white">
+              <h2 className="text-2xl font-black uppercase tracking-tighter italic text-white group-hover:text-indigo-400 transition-colors">
                 Core<span className="text-indigo-500">Anime</span>
               </h2>
             </div>
@@ -23,7 +31,7 @@ export default function Footer() {
               Platform eksplorasi anime generasi mutakhir. Didukung oleh <span className="text-gray-300 font-bold">Kodel Core Engine</span> untuk akses arsip media global yang komprehensif dan efisien.
             </p>
             <div className="flex gap-6">
-              <a href="https://github.com/kodel-dev" target="_blank" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-indigo-500 transition-all">GitHub</a>
+              <a href="https://github.com/kodel-dev" target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-indigo-500 transition-all">GitHub</a>
               <a href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-indigo-500 transition-all">Instagram</a>
               <a href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-indigo-500 transition-all">Discord</a>
             </div>
