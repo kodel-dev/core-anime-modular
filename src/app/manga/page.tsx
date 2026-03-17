@@ -4,231 +4,135 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MangaCard from '@/components/Manga/MangaCard';
-import ScheduleCard from '@/components/Manga/ScheduleCard';
-import { getTrendingManga, getWeeklySchedule } from '@/lib/manga-service';
+import { getTrendingManga } from '@/lib/manga-service';
 
-const DAYS = [
-  { id: 'monday', label: 'Senin' },
-  { id: 'tuesday', label: 'Selasa' },
-  { id: 'wednesday', label: 'Rabu' },
-  { id: 'thursday', label: 'Kamis' },
-  { id: 'friday', label: 'Jumat' },
-  { id: 'saturday', label: 'Sabtu' },
-  { id: 'sunday', label: 'Minggu' },
-];
-
-const GENRES = [
-  { id: '', label: 'Semua Koleksi' },
-  { id: 'action', label: 'Action' },
-  { id: 'adventure', label: 'Adventure' },
-  { id: 'comedy', label: 'Comedy' },
-  { id: 'fantasy', label: 'Fantasy' },
-  { id: 'romance', label: 'Romance' },
-  { id: 'horror', label: 'Horror' },
-];
-
-export default function MangaPage() {
+export default function MangaDiscoveryPage() {
+  // --- State Management ---
   const [data, setData] = useState<any[]>([]);
-  const [schedule, setSchedule] = useState<any[]>([]);
-  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
-  const [activeDay, setActiveDay] = useState(
-    DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1].id
-  );
-
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [loadingSchedule, setLoadingSchedule] = useState(false);
-
-  const [selectedGenre, setSelectedGenre] = useState('');
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-
-  const scrollRefToday = useRef<HTMLDivElement>(null);
-  const scrollRefWeekly = useRef<HTMLDivElement>(null);
+  
   const isFetching = useRef(false);
 
-  const handleScroll = (ref: any, direction: 'left' | 'right') => {
-    if (!ref.current) return;
-    const move = ref.current.clientWidth * 0.8;
-    ref.current.scrollBy({
-      left: direction === 'left' ? -move : move,
-      behavior: 'smooth',
-    });
-  };
-
-  const convertToWIB = (jstTime: string) => {
-    if (!jstTime || jstTime === 'TBA') return 'TBA';
-    const [h, m] = jstTime.split(':').map(Number);
-    let wib = h - 2;
-    if (wib < 0) wib += 24;
-    return `${wib.toString().padStart(2, '0')}:${m
-      .toString()
-      .padStart(2, '0')} WIB`;
-  };
-
-  useEffect(() => {
-    const loadSchedules = async () => {
-      setLoadingSchedule(true);
-      try {
-        const res = await getWeeklySchedule(activeDay);
-        setSchedule(res);
-
-        const todayId =
-          DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1].id;
-
-        const todayRes = await getWeeklySchedule(todayId);
-        setTodaySchedule(todayRes.slice(0, 10));
-      } finally {
-        setLoadingSchedule(false);
-      }
-    };
-    loadSchedules();
-  }, [activeDay]);
-
-  const loadManga = useCallback(async (isMore = false) => {
+  /**
+   * Mengambil data manga dari layanan API.
+   * Mendukung mode pencarian maupun tampilan manga terpopuler.
+   */
+  const fetchMangaData = useCallback(async (isMore = false) => {
     if (isFetching.current) return;
     isFetching.current = true;
 
-    const target = isMore ? page + 1 : 0;
+    const targetPage = isMore ? page + 1 : 0;
 
     try {
       const res = await getTrendingManga({
         query: searchQuery,
-        genre: selectedGenre,
-        page: target,
+        page: targetPage,
       });
 
       if (!res?.length) {
         setHasMore(false);
         if (!isMore) setData([]);
       } else {
+        // Asumsi limit per halaman adalah 20
         setHasMore(res.length >= 20);
-        setData((prev) => (isMore ? [...prev, ...res] : res));
-        setPage(target);
+        setData(prev => (isMore ? [...prev, ...res] : res));
+        setPage(targetPage);
       }
+    } catch (error) {
+      console.error("Manga Service Error:", error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       isFetching.current = false;
     }
-  }, [page, searchQuery, selectedGenre]);
+  }, [page, searchQuery]);
 
+  /**
+   * Menangani efek pencarian dengan sistem debounce
+   * untuk mengoptimalkan performa permintaan API.
+   */
   useEffect(() => {
-    const t = setTimeout(() => loadManga(false), 400);
-    return () => clearTimeout(t);
-  }, [searchQuery, selectedGenre]);
+    setLoading(true);
+    const debounceTimer = setTimeout(() => {
+      fetchMangaData(false);
+    }, 500);
+    
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-[#060910] text-white flex flex-col overflow-x-hidden">
       <Navbar />
 
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-24 md:pt-32 pb-16">
-
-        {/* TODAY */}
-        {todaySchedule.length > 0 && (
-          <section className="mb-12">
-            <h3 className="text-lg sm:text-xl md:text-2xl font-black mb-4">
-              Rilis <span className="text-blue-500">Hari Ini</span>
-            </h3>
-
-            <div className="relative">
-              <button
-                onClick={() => handleScroll(scrollRefToday, 'left')}
-                className="hidden md:flex absolute left-0 top-0 bottom-0 z-10 items-center px-3"
-              >
-                ◀
-              </button>
-
-              <div
-                ref={scrollRefToday}
-                className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2"
-              >
-                {todaySchedule.map((item, i) => (
-                  <div key={i} className="snap-start shrink-0 w-[70%] sm:w-[45%] md:w-[300px]">
-                    <ScheduleCard item={item} convertToWIB={convertToWIB} variant="large" />
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => handleScroll(scrollRefToday, 'right')}
-                className="hidden md:flex absolute right-0 top-0 bottom-0 z-10 items-center px-3"
-              >
-                ▶
-              </button>
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-24 md:pt-32 pb-16 space-y-10">
+        
+        {/* HEADER & SEARCH INTERFACE */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-1 w-8 bg-indigo-500 rounded-full" />
+              <span className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Digital Collection</span>
             </div>
-          </section>
-        )}
-
-        {/* WEEKLY */}
-        <section className="mb-12">
-          <h3 className="text-lg md:text-xl font-bold mb-4">
-            Jadwal Mingguan
-          </h3>
-
-          <div className="flex gap-2 overflow-x-auto pb-4">
-            {DAYS.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setActiveDay(d.id)}
-                className={`px-4 py-2 text-xs rounded-lg whitespace-nowrap ${
-                  activeDay === d.id
-                    ? 'bg-red-600'
-                    : 'bg-white/10 text-gray-400'
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto">
-            {schedule.map((item, i) => (
-              <div key={i} className="shrink-0 w-[70%] sm:w-[45%] md:w-[250px]">
-                <ScheduleCard item={item} convertToWIB={convertToWIB} />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* LIBRARY */}
-        <section>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <h2 className="text-2xl md:text-5xl font-black">
-              Manga Library
+            <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter">
+              Manga <span className="text-indigo-500">Repository</span>
             </h2>
+          </div>
 
+          <div className="relative w-full md:max-w-md">
             <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari..."
-              className="w-full md:max-w-sm px-4 py-2 rounded-lg bg-white/10 text-sm"
+              placeholder="Cari berdasarkan judul manga..."
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-gray-600 shadow-inner"
             />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
+        </div>
 
-          <div className="flex gap-2 flex-wrap mb-6">
-            {GENRES.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => setSelectedGenre(g.id)}
-                className={`px-3 py-1 text-xs rounded ${
-                  selectedGenre === g.id
-                    ? 'bg-blue-600'
-                    : 'bg-white/10 text-gray-400'
-                }`}
-              >
-                {g.label}
-              </button>
+        {/* CONTENT GRID SECTION */}
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 animate-pulse">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-white/5 rounded-2xl" />
             ))}
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {data.map((m, i) => (
-              <MangaCard key={i} manga={m} />
+        ) : data.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+            {data.map((manga, i) => (
+              <MangaCard key={`${manga.id}-${i}`} manga={manga} />
             ))}
           </div>
-        </section>
+        ) : (
+          <div className="py-32 text-center border border-dashed border-white/5 rounded-[2.5rem]">
+            <p className="text-gray-500 font-medium italic text-sm">Maaf, entri manga tidak ditemukan dalam database kami.</p>
+          </div>
+        )}
+
+        {/* PAGINATION / LOAD MORE */}
+        {hasMore && !loading && (
+          <div className="flex justify-center pt-10">
+            <button
+              onClick={() => {
+                setLoadingMore(true);
+                fetchMangaData(true);
+              }}
+              disabled={loadingMore}
+              className="bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-50 active:scale-95"
+            >
+              {loadingMore ? 'Memproses...' : 'Tampilkan Lebih Banyak'}
+            </button>
+          </div>
+        )}
       </main>
 
       <Footer />

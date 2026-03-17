@@ -26,6 +26,17 @@ export default function MangaCard({ manga }: MangaCardProps) {
     'Content-Type': 'application/vnd.api+json',
   };
 
+  // ─── FIX ERROR: Fungsi Konversi Waktu ───
+  const convertToWIB = (timeString: string) => {
+    if (!timeString) return '';
+    try {
+      const [hours, minutes] = timeString.split(':').map(Number);
+      let localHours = hours - 2; // Estimasi JST (UTC+9) ke WIB (UTC+7)
+      if (localHours < 0) localHours += 24;
+      return `${localHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} WIB`;
+    } catch (e) { return timeString; }
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'TBA';
     return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -46,7 +57,8 @@ export default function MangaCard({ manga }: MangaCardProps) {
   const fetchInitialInfo = async () => {
     setLoadingDetail(true);
     try {
-      const res  = await fetch(`https://kitsu.io/api/edge/manga/${manga.id}?include=genres`, { headers: KITSU_HEADERS });
+      // Mengambil genre dan data produksi (studio) secara dinamis
+      const res  = await fetch(`https://kitsu.io/api/edge/manga/${manga.id}?include=genres,productions.producer`, { headers: KITSU_HEADERS });
       const data = await res.json();
       setFullDetail(data);
     } catch (e) { console.error(e); }
@@ -98,6 +110,16 @@ export default function MangaCard({ manga }: MangaCardProps) {
     fetchTabData();
   }, [activeTab, isPreviewOpen, manga.id]);
 
+  // ─── LOGIKA DINAMIS UNTUK STUDIO & MUSIM ───
+  const getStudios = () => {
+    const prods = fullDetail?.included?.filter((i: any) => i.type === 'producers') || [];
+    return prods.map((p: any) => p.attributes.name).join(', ');
+  };
+
+  const seasonName = attributes?.season ? attributes.season.charAt(0).toUpperCase() + attributes.season.slice(1) : "";
+  const releaseYear = attributes?.startDate ? attributes.startDate.substring(0, 4) : "";
+  const displaySeason = seasonName || releaseYear ? `${seasonName} ${releaseYear}`.trim() : "TBA";
+
   const detailData = [
     { label: 'Inggris',       value: attributes?.titles?.en },
     { label: 'Jepang',        value: attributes?.titles?.ja_jp },
@@ -108,13 +130,14 @@ export default function MangaCard({ manga }: MangaCardProps) {
     { label: 'Bab',           value: attributes?.chapterCount },
     { label: 'Status',        value: attributes?.status === 'finished' ? 'Selesai Diterbitkan' : 'Sedang Terbit' },
     { label: 'Tgl Terbit',    value: attributes?.startDate ? `${formatDate(attributes.startDate)}${attributes.endDate ? ` — ${formatDate(attributes.endDate)}` : ' — Sekarang'}` : 'TBA' },
+    { label: 'Musim',         value: displaySeason },
+    { label: 'Studio',        value: getStudios() || 'TBA' },
     { label: 'Rating',        value: attributes?.ageRatingGuide },
   ];
 
-  /* ──────────────────────────────────────────────────────────── */
   return (
     <>
-      {/* ═══ CARD ═══════════════════════════════════════════════ */}
+      {/* ═══ CARD ═══ */}
       <div
         onClick={() => setIsPreviewOpen(true)}
         className="group relative overflow-hidden rounded-2xl bg-[#0d1117] border border-white/5
@@ -129,7 +152,6 @@ export default function MangaCard({ manga }: MangaCardProps) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
 
-          {/* score badge */}
           {attributes?.averageRating && (
             <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-md px-1.5 py-0.5">
               <span className="text-yellow-400 text-[8px] leading-none">★</span>
@@ -137,14 +159,12 @@ export default function MangaCard({ manga }: MangaCardProps) {
             </div>
           )}
 
-          {/* type badge */}
           {attributes?.mangaType && (
             <div className="absolute top-2 left-2 bg-indigo-600/80 backdrop-blur-md rounded-md px-1.5 py-0.5">
               <span className="text-white text-[7px] font-black uppercase tracking-widest">{attributes.mangaType}</span>
             </div>
           )}
 
-          {/* hover hint */}
           <div className="absolute inset-0 flex items-end justify-start p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-2.5 py-1.5">
               <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -165,7 +185,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
         </div>
       </div>
 
-      {/* ═══ MODAL ══════════════════════════════════════════════ */}
+      {/* ═══ MODAL ═══ */}
       {isPreviewOpen && (
         <div
           className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center
@@ -182,12 +202,10 @@ export default function MangaCard({ manga }: MangaCardProps) {
                        animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-300 ease-out"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* drag handle */}
             <div className="sm:hidden absolute top-0 inset-x-0 flex justify-center pt-2.5 z-10 pointer-events-none">
               <div className="w-9 h-1 rounded-full bg-white/20" />
             </div>
 
-            {/* close btn */}
             <button
               onClick={() => setIsPreviewOpen(false)}
               className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-50
@@ -201,7 +219,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
               </svg>
             </button>
 
-            {/* ── SIDEBAR ───────────────────────────────────────── */}
+            {/* SIDEBAR */}
             <aside
               className="shrink-0 w-full lg:w-[280px] xl:w-[320px]
                          flex flex-col overflow-y-auto no-scrollbar
@@ -211,30 +229,18 @@ export default function MangaCard({ manga }: MangaCardProps) {
                          bg-gradient-to-b from-[#0b0e18] to-[#07090f]"
             >
               <div className="flex gap-4 lg:block">
-                {/* poster */}
                 <div className="relative shrink-0 w-[95px] sm:w-[120px] lg:w-full aspect-[3/4]
                                 rounded-xl lg:rounded-2xl overflow-hidden
                                 border border-white/[0.08] bg-black shadow-2xl">
-                  <img src={posterImage} className="w-full h-full object-cover" alt={attributes?.canonicalTitle} />
+                  <img src={posterImage} className="w-full h-full object-cover" alt="" />
                 </div>
 
-                {/* mobile: title + CTA */}
                 <div className="flex flex-col justify-between flex-1 lg:hidden py-0.5 min-w-0">
                   <div>
                     <p className="text-indigo-400/60 text-[7px] font-black uppercase tracking-[0.4em] mb-1">Manga</p>
                     <h2 className="text-white text-[13px] sm:text-[15px] font-black italic uppercase tracking-tight leading-[1.05] line-clamp-3">
                       {attributes?.canonicalTitle}
                     </h2>
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                      {attributes?.averageRating && (
-                        <span className="text-yellow-400 text-[9px] font-bold">★ {attributes.averageRating}%</span>
-                      )}
-                      {attributes?.status && (
-                        <span className={`text-[8px] font-black ${attributes.status === 'finished' ? 'text-gray-500' : 'text-green-400'}`}>
-                          {attributes.status === 'finished' ? '· Selesai' : '· Terbit'}
-                        </span>
-                      )}
-                    </div>
                   </div>
                   <button className="mt-3 w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white py-2 rounded-lg font-black text-[8px] uppercase tracking-widest transition-all">
                     + Pustaka
@@ -242,12 +248,10 @@ export default function MangaCard({ manga }: MangaCardProps) {
                 </div>
               </div>
 
-              {/* desktop: CTA */}
               <button className="hidden lg:block mt-6 w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-950/40">
                 + Tambahkan ke Pustaka
               </button>
 
-              {/* desktop: detail list */}
               <div className="hidden lg:block mt-8 pt-7 border-t border-white/[0.06] space-y-3.5">
                 <p className="text-[9px] text-white font-black uppercase tracking-[0.35em] mb-5 flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-sm bg-indigo-600 inline-block" />
@@ -264,41 +268,19 @@ export default function MangaCard({ manga }: MangaCardProps) {
               </div>
             </aside>
 
-            {/* ── MAIN ─────────────────────────────────────────── */}
+            {/* MAIN */}
             <main className="flex-1 flex flex-col overflow-hidden bg-[#07090f] min-h-0">
-
               <header className="shrink-0 px-4 sm:px-7 pt-3 sm:pt-6 pb-0 border-b border-white/[0.07] bg-[#07090f]/95 backdrop-blur-md z-20">
-                {/* desktop title */}
                 <div className="hidden lg:block mb-4 pr-10">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="h-px w-6 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+                    <div className="h-px w-6 bg-indigo-500" />
                     <span className="text-indigo-400/70 text-[8px] font-black uppercase tracking-[0.5em]">Manga Node</span>
                   </div>
                   <h2 className="text-3xl xl:text-5xl font-black italic text-white uppercase tracking-tight leading-[0.9] line-clamp-2">
                     {attributes?.canonicalTitle}
                   </h2>
-                  <div className="flex flex-wrap items-center gap-2 mt-2.5">
-                    {attributes?.averageRating && (
-                      <span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/15 px-2.5 py-0.5 rounded-full text-[8px] font-black">
-                        ★ {attributes.averageRating}%
-                      </span>
-                    )}
-                    {attributes?.startDate && (
-                      <span className="text-gray-600 text-[8px] font-bold">{attributes.startDate.substring(0, 4)}</span>
-                    )}
-                    {attributes?.status && (
-                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${
-                        attributes.status === 'finished'
-                          ? 'text-gray-500 border-gray-700/40 bg-gray-800/30'
-                          : 'text-green-400 border-green-600/30 bg-green-900/20'
-                      }`}>
-                        {attributes.status === 'finished' ? 'Selesai' : '● Terbit'}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
-                {/* tabs */}
                 <nav className="flex overflow-x-auto no-scrollbar">
                   {TABS.map((tab) => (
                     <button
@@ -310,7 +292,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
                     >
                       {tab}
                       {activeTab === tab && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.7)] rounded-full" />
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-indigo-500 rounded-full" />
                       )}
                     </button>
                   ))}
@@ -325,110 +307,65 @@ export default function MangaCard({ manga }: MangaCardProps) {
                   </div>
                 ) : (
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 text-left">
-
-                    {/* RINGKASAN */}
                     {activeTab === 'Ringkasan' && (
                       <div className="max-w-2xl space-y-5">
                         <p className="text-gray-300 text-[13px] sm:text-[14px] leading-relaxed">
                           {attributes?.synopsis || 'Deskripsi belum tersedia.'}
                         </p>
-                        {/* detail grid — mobile only */}
-                        <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-2 pt-5 border-t border-white/[0.06]">
-                          {detailData.map((d, i) =>
-                            d.value ? (
-                              <div key={i} className="bg-white/[0.04] hover:bg-white/[0.06] transition-colors rounded-xl p-3 border border-white/[0.06]">
-                                <p className="text-[7px] text-indigo-400/60 font-black uppercase tracking-widest mb-1">{d.label}</p>
-                                <p className="text-[10px] text-gray-200 font-semibold leading-tight break-words">{d.value}</p>
-                              </div>
-                            ) : null
-                          )}
-                        </div>
                       </div>
                     )}
 
-                    {/* BAB */}
                     {activeTab === 'Bab' && (
-                      chapters.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {chapters.map((ch: any, i: number) => (
-                            <div key={i} className="flex gap-3 p-3 bg-white/[0.04] hover:bg-white/[0.07] transition-colors rounded-xl border border-white/[0.06] group/ch">
-                              <div className="w-10 h-14 bg-gray-900 rounded-lg shrink-0 overflow-hidden border border-white/[0.07]">
-                                <img src={ch.attributes?.thumbnail?.original || posterImage} className="w-full h-full object-cover group-hover/ch:scale-105 transition-transform duration-500" alt="" />
-                              </div>
-                              <div className="flex flex-col justify-center min-w-0">
-                                <span className="text-indigo-400 text-[7px] sm:text-[8px] font-black uppercase mb-0.5 tracking-widest">Chapter {ch.attributes?.number}</span>
-                                <h4 className="text-white text-[11px] sm:text-[12px] font-black uppercase italic leading-tight line-clamp-2">
-                                  {ch.attributes?.canonicalTitle || `Chapter ${ch.attributes?.number}`}
-                                </h4>
-                              </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {chapters.map((ch: any, i: number) => (
+                          <div key={i} className="flex gap-3 p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                            <div className="w-10 h-14 bg-gray-900 rounded-lg shrink-0 overflow-hidden">
+                              <img src={ch.attributes?.thumbnail?.original || posterImage} className="w-full h-full object-cover" alt="" />
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-24 gap-3 opacity-30">
-                          <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          </svg>
-                          <span className="text-[8px] font-black uppercase tracking-widest">Data bab sedang disinkronkan</span>
-                        </div>
-                      )
+                            <div className="flex flex-col justify-center min-w-0">
+                               <span className="text-indigo-400 text-[7px] font-black uppercase">Chapter {ch.attributes?.number}</span>
+                               <h4 className="text-white text-xs font-bold truncate italic">{ch.attributes?.canonicalTitle || `Chapter ${ch.attributes?.number}`}</h4>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
 
-                    {/* KARAKTER */}
                     {activeTab === 'Karakter' && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {characters.map((char: any, i: number) => (
-                          <div key={i} className="group/ch">
-                            <div className="bg-gradient-to-br from-red-700 to-red-950 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-red-500/20 overflow-hidden">
-                              <div className="aspect-[3/4] overflow-hidden rounded-lg sm:rounded-xl bg-black/40">
-                                <img src={char.image} className="w-full h-full object-cover group-hover/ch:scale-105 transition-transform duration-500" alt={char.name} />
-                              </div>
-                              <div className="bg-white mt-1 sm:mt-1.5 rounded-md sm:rounded-lg px-1.5 py-2 flex items-center justify-center min-h-[36px] sm:min-h-[44px]">
-                                <p className="text-[8px] sm:text-[9px] font-black text-black uppercase leading-tight tracking-tight text-center break-words">{char.name}</p>
-                              </div>
-                            </div>
+                          <div key={i} className="bg-gradient-to-br from-red-700 to-red-950 p-1.5 rounded-2xl">
+                            <img src={char.image} className="w-full aspect-[3/4] object-cover rounded-xl" alt="" />
+                            <div className="bg-white mt-1.5 rounded-lg py-2"><p className="text-[9px] font-black text-black uppercase text-center truncate px-2">{char.name}</p></div>
                           </div>
                         ))}
                       </div>
                     )}
 
-                    {/* REAKSI */}
                     {activeTab === 'Reaksi' && (
-                      <div className="space-y-3 max-w-3xl">
+                      <div className="space-y-4">
                         {reactions.map((rev: any, i: number) => (
-                          <div key={i} className="bg-white/[0.04] hover:bg-white/[0.06] transition-colors p-4 sm:p-6 rounded-2xl border border-white/[0.07] flex flex-col sm:flex-row gap-4">
-                            <div className="flex sm:flex-col items-center gap-3 sm:gap-2 sm:w-20 shrink-0">
-                              <img src={rev.user?.attributes?.avatar?.tiny || 'https://placehold.co/100x100?text=U'} className="w-10 h-10 rounded-full border border-indigo-500/25 object-cover" alt="" />
-                              <div>
-                                <p className="text-white text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-none">{rev.user?.attributes?.name || 'User'}</p>
-                                <p className="text-yellow-400 text-[8px] font-black">★ {rev.attributes?.likesCount || 0}</p>
-                              </div>
-                            </div>
-                            <div className="flex-1 sm:border-l sm:border-indigo-500/20 sm:pl-5 min-w-0">
-                              <p className="text-gray-300 text-[12px] sm:text-[13px] leading-relaxed italic break-words">"{rev.attributes?.content}"</p>
+                          <div key={i} className="bg-white/[0.04] p-5 rounded-2xl flex gap-4 border border-white/[0.07]">
+                            <img src={rev.user?.attributes?.avatar?.tiny || 'https://placehold.co/100x100?text=U'} className="w-10 h-10 rounded-full object-cover" alt="" />
+                            <div className="flex-1 border-l border-indigo-500/20 pl-4">
+                               <p className="text-white text-xs font-bold mb-1">{rev.user?.attributes?.name} <span className="text-yellow-500 ml-2">★ {rev.attributes?.likesCount}</span></p>
+                               <p className="text-gray-400 text-[12px] italic">"{rev.attributes?.content}"</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
 
-                    {/* FRANCHISE */}
                     {activeTab === 'Franchise' && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {franchise.map((f: any, i: number) => (
-                          <div key={i} className="bg-white/[0.04] hover:bg-indigo-600/10 hover:border-indigo-500/25 transition-all p-3 rounded-xl sm:rounded-2xl border border-white/[0.06] flex gap-3.5 items-center">
-                            <div className="w-10 aspect-[2/3] shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-gray-900">
-                              <img src={f.dest?.attributes?.posterImage?.tiny || posterImage} className="w-full h-full object-cover" alt="" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[7px] text-indigo-400 font-black uppercase mb-1 tracking-widest">{f.role}</p>
-                              <p className="text-[11px] text-white font-black line-clamp-2 uppercase italic leading-tight">{f.dest?.attributes?.canonicalTitle || 'Unknown'}</p>
-                            </div>
+                          <div key={i} className="bg-white/[0.04] p-3 rounded-xl flex gap-3 items-center border border-white/[0.06]">
+                            <img src={f.dest?.attributes?.posterImage?.tiny} className="w-10 h-14 rounded-lg object-cover" alt="" />
+                            <div className="min-w-0"><p className="text-[7px] text-indigo-400 font-black uppercase mb-1">{f.role}</p><p className="text-xs text-white font-bold truncate">{f.dest?.attributes?.canonicalTitle}</p></div>
                           </div>
                         ))}
                       </div>
                     )}
-
                   </div>
                 )}
               </div>

@@ -1,98 +1,124 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import WaifuCard from '@/components/Waifu/WaifuCard';
 import { getWaifuGallery } from '@/lib/waifu-service';
 
+// Daftar kategori yang tersedia
+const CATEGORIES = [
+  { id: 'waifu', label: 'Waifu' },
+  { id: 'neko', label: 'Neko' },
+  { id: 'shinobu', label: 'Shinobu' },
+  { id: 'megumin', label: 'Megumin' },
+  { id: 'bully', label: 'Bully' },
+  { id: 'cuddle', label: 'Cuddle' },
+];
+
 export default function WaifuPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  
-  // Ref untuk mengunci proses fetch agar tidak double request
-  const isFetching = useRef(false);
+  const [category, setCategory] = useState('waifu');
+  const [isModalOpen, setIsModalOpen] = useState(false); // State untuk kontrol Navbar
 
-  // loadData dibungkus useCallback agar referensi fungsinya stabil
-  const loadData = useCallback(async (isMore = false) => {
-    if (isFetching.current) return;
-    isFetching.current = true;
-    
-    if (isMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
+  const fetchImages = useCallback(async (isMore = false) => {
+    if (isMore) setLoadingMore(true);
+    else setLoading(true);
 
     try {
-      const responseData = await getWaifuGallery('waifu');
+      const responseData = await getWaifuGallery(category);
       if (isMore) {
         setData(prev => {
           const combined = [...prev, ...responseData];
-          // Filter duplikat URL
-          return combined.filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
+          return combined.filter((item, index, self) => 
+            index === self.findIndex((t) => t.url === item.url)
+          );
         });
       } else {
         setData(responseData);
       }
     } catch (err) {
-      console.error("Gallery Sync Error:", err);
+      console.error("Gagal memuat galeri:", err);
     } finally {
       setLoading(false);
       setLoadingMore(false);
-      isFetching.current = false;
     }
-  }, []); // Dependency array kosong agar fungsi tidak berubah-ubah
+  }, [category]);
 
-  // useEffect untuk Initial Load & Infinite Scroll
+  // Reset data saat kategori berubah
   useEffect(() => {
-    // Jalankan load pertama kali
-    loadData();
-
-    const handleScroll = () => {
-      const scrollHeight = document.documentElement.scrollHeight;
-      const currentPos = window.innerHeight + window.scrollY;
-      
-      // Trigger jika sudah mendekati bawah (sisa 800px)
-      if (currentPos >= scrollHeight - 800 && !isFetching.current) {
-        loadData(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadData]); // Hanya bergantung pada loadData yang sudah stabil
+    fetchImages(false);
+  }, [category, fetchImages]);
 
   return (
     <div className="min-h-screen bg-[#060910] text-gray-100 flex flex-col">
-      <Navbar />
+      {/* Navbar akan hilang jika modal terbuka */}
+      {!isModalOpen && <Navbar />}
       
-      <main className="container mx-auto px-6 pt-40 pb-20 flex-grow relative z-10">
-        <div className="flex items-center gap-6 mb-16">
-          <div className="h-12 w-2 bg-blue-600 rounded-full shadow-[0_0_30px_rgba(37,99,235,0.5)]"></div>
-          <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
-            Waifu <span className="text-blue-600 opacity-50">Gallery</span>
-          </h2>
+      <main className={`container mx-auto px-4 sm:px-6 pb-20 flex-grow relative z-10 ${!isModalOpen ? 'pt-24 md:pt-32' : 'pt-0'}`}>
+        
+        {/* Header & Filter Kategori */}
+        <div className="mb-12 space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-1.5 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.4)]"></div>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white italic">
+              Galeri <span className="text-blue-500">Koleksi</span>
+            </h2>
+          </div>
+
+          {/* Navigasi Kategori */}
+          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategory(cat.id)}
+                className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all shrink-0 border 
+                  ${category === cat.id 
+                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20' 
+                    : 'bg-white/5 border-white/10 text-gray-500 hover:text-white hover:bg-white/10'
+                  }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {/* Grid Konten */}
         {loading && data.length === 0 ? (
           <div className="py-40 text-center">
-            <div className="inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-[10px] font-black tracking-[1em] text-blue-500 uppercase italic">Accessing Core...</p>
+            <div className="inline-block w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">Mengambil data kategori {category}...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 animate-in fade-in duration-700">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
             {data.map((item, idx) => (
-              <WaifuCard key={`${item.url}-${idx}`} image={item} />
+              <WaifuCard 
+                key={`${item.url}-${idx}`} 
+                image={item} 
+                onToggleModal={(isOpen) => setIsModalOpen(isOpen)} 
+              />
             ))}
           </div>
         )}
 
-        {loadingMore && (
-          <div className="mt-20 flex flex-col items-center gap-4 py-10">
-            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-[8px] font-black tracking-[0.5em] text-blue-500 uppercase">Expanding Archive...</p>
+        {/* Tombol Muat Lebih Banyak */}
+        {!loading && data.length > 0 && (
+          <div className="mt-16 flex justify-center">
+            <button
+              onClick={() => fetchImages(true)}
+              disabled={loadingMore}
+              className="group relative px-10 py-4 bg-white/5 border border-white/10 rounded-2xl overflow-hidden transition-all hover:border-blue-500/50 active:scale-95 disabled:opacity-50"
+            >
+              <div className="flex items-center gap-3">
+                {loadingMore && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 group-hover:text-blue-400">
+                  {loadingMore ? 'Sedang Memuat...' : 'Muat Lebih Banyak'}
+                </span>
+              </div>
+            </button>
           </div>
         )}
       </main>

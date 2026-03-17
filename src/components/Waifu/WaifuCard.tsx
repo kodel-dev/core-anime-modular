@@ -3,30 +3,35 @@
 import React, { useState, useEffect } from 'react';
 
 interface WaifuCardProps {
-  image: {
-    url: string;
-    id?: string;
-  };
+  image: { url: string; id?: string; };
   priority?: boolean;
+  onToggleModal?: (isOpen: boolean) => void;
 }
 
-export default function WaifuCard({ image, priority }: WaifuCardProps) {
+export default function WaifuCard({ image, priority, onToggleModal }: WaifuCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [imgDimensions, setImgDimensions] = useState({ w: 0, h: 0 });
 
-  // Mengambil dimensi asli gambar & lock scroll
   useEffect(() => {
     if (isPreviewOpen) {
       document.body.style.overflow = 'hidden';
+      onToggleModal?.(true); 
+      
       const img = new Image();
       img.onload = () => setImgDimensions({ w: img.width, h: img.height });
       img.src = image.url;
     } else {
       document.body.style.overflow = 'unset';
+      onToggleModal?.(false);
     }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isPreviewOpen, image.url]);
+
+    return () => { 
+      document.body.style.overflow = 'unset'; 
+      onToggleModal?.(false);
+    };
+    // Hapus onToggleModal dari sini agar jumlah array selalu 2 (Tetap: isPreviewOpen & image.url)
+  }, [isPreviewOpen, image.url]); 
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,7 +41,7 @@ export default function WaifuCard({ image, priority }: WaifuCardProps) {
       const downloadUrl = `/api/download?url=${encodeURIComponent(image.url)}`;
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `core-waifu-${Date.now()}.png`;
+      link.download = `core-anime-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -49,104 +54,82 @@ export default function WaifuCard({ image, priority }: WaifuCardProps) {
 
   return (
     <>
-      {/* Thumbnail Card */}
+      {/* Kartu Thumbnail */}
       <div 
         onClick={() => setIsPreviewOpen(true)}
-        className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-900 cursor-zoom-in border border-white/5 transition-all hover:border-blue-500/50 shadow-xl"
+        className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#0b0e14] cursor-zoom-in border border-white/5 hover:border-blue-500/50 transition-all shadow-xl"
       >
         <img 
           src={image.url} 
-          alt="Waifu Asset"
-          loading={priority ? "eager" : "lazy"}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+          alt="Preview"
+          className="h-full w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-           <p className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em]">Open Archive</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+           <p className="text-[10px] font-bold text-white uppercase tracking-widest">Detail</p>
         </div>
       </div>
 
-      {/* Professional Detail Modal */}
+      {/* Modal Detail */}
       {isPreviewOpen && (
         <div 
-          className="fixed inset-0 z-[99999] flex flex-col bg-[#060910]/98 backdrop-blur-3xl animate-in fade-in duration-300"
+          className="fixed inset-0 z-[100000] flex flex-col bg-[#060910] animate-in fade-in duration-300"
           onClick={() => setIsPreviewOpen(false)}
         >
-          {/* Main Layout dengan Padding Top Tinggi agar di bawah Navbar */}
-          <div className="flex-grow flex flex-col lg:flex-row pt-32 lg:pt-36 pb-10 overflow-hidden">
-            
-            {/* Left Side: Image Preview */}
-            <div className="flex-[1.5] h-full flex items-center justify-center p-4 md:p-12 relative overflow-hidden">
+          {/* Tombol Tutup */}
+          <button 
+            className="absolute top-6 right-6 z-[100001] w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-red-500 rounded-full text-white transition-all backdrop-blur-md border border-white/10"
+            onClick={() => setIsPreviewOpen(false)}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto no-scrollbar pt-20 lg:pt-0">
+            {/* Sisi Gambar */}
+            <div className="w-full lg:w-[60%] h-[60vh] lg:h-full flex items-center justify-center p-6 lg:p-12">
               <img 
                 src={image.url} 
-                className="max-w-full max-h-full object-contain rounded-lg shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5 animate-in zoom-in-95 duration-500"
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/5 animate-in zoom-in-95 duration-500"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
 
-            {/* Right Side: Professional Details Panel */}
+            {/* Sisi Info */}
             <div 
-              className="flex-1 bg-white/[0.02] border-l border-white/5 p-8 md:p-12 flex flex-col justify-between overflow-y-auto no-scrollbar"
+              className="flex-1 p-8 sm:p-12 lg:flex lg:flex-col lg:justify-center lg:border-l lg:border-white/5"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="space-y-10">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-[2px] w-8 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.8)]"></div>
-                    <span className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em]">Metadata Analysis</span>
-                  </div>
-                  <h2 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter leading-none mb-4">
-                    Neural <span className="text-blue-600">Waifu</span>
-                  </h2>
-                  <p className="text-gray-500 text-xs leading-relaxed italic opacity-70">
-                    High-fidelity asset retrieved from Core Gallery. Neural processing stable. Verified for collectible status.
-                  </p>
+              <div className="max-w-md mx-auto lg:mx-0 w-full">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-1 w-8 bg-blue-600 rounded-full"></div>
+                  <span className="text-blue-500 text-[10px] font-black uppercase tracking-[0.3em]">Detail Gambar</span>
                 </div>
 
-                {/* Technical Specs */}
-                <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/5">
-                  <div className="space-y-1">
-                    <p className="text-[9px] text-gray-600 uppercase font-bold tracking-[0.2em]">Resolution</p>
-                    <p className="text-sm font-mono text-gray-200">{imgDimensions.w} x {imgDimensions.h}</p>
+                <h2 className="text-4xl sm:text-5xl font-black italic text-white uppercase tracking-tighter mb-6 leading-none">
+                  Info <span className="text-blue-600">Koleksi</span>
+                </h2>
+                
+                <div className="grid grid-cols-2 gap-10 border-t border-white/5 pt-10 mb-12">
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase mb-2">Resolusi</p>
+                    <p className="text-lg font-mono text-gray-200">{imgDimensions.w} x {imgDimensions.h}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] text-gray-600 uppercase font-bold tracking-[0.2em]">Source</p>
-                    <p className="text-sm font-mono text-gray-200">WAIFU_PICS_API</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] text-gray-600 uppercase font-bold tracking-[0.2em]">Format</p>
-                    <p className="text-sm font-mono text-gray-200">IMAGE/PNG</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] text-gray-600 uppercase font-bold tracking-[0.2em]">Class</p>
-                    <p className="text-sm font-mono text-gray-200">SFW_GALLERY</p>
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase mb-2">Status</p>
+                    <p className="text-lg font-mono text-emerald-400">Tersedia</p>
                   </div>
                 </div>
 
-                {/* Tags */}
-                <div className="pt-8">
-                  <p className="text-[9px] text-gray-600 uppercase font-bold tracking-[0.2em] mb-4">Classifiers</p>
-                  <div className="flex flex-wrap gap-2">
-                    {['WAIFU', 'NEURAL_HD', 'COLLECTIBLE', 'VERIFIED'].map(tag => (
-                      <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[8px] font-bold text-gray-400">#{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-4 pt-12 border-t border-white/5 mt-10">
                 <button 
                   onClick={handleDownload}
                   disabled={isDownloading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 shadow-[0_10px_40px_rgba(37,99,235,0.3)] hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50"
                 >
-                  {isDownloading ? 'Syncing...' : 'Download Waifu Asset'}
-                </button>
-                <button 
-                  onClick={() => setIsPreviewOpen(false)}
-                  className="w-full bg-transparent hover:bg-white/5 text-gray-500 hover:text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] transition-all border border-white/5"
-                >
-                  Close [×]
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  {isDownloading ? 'Menyimpan...' : 'Simpan Gambar'}
                 </button>
               </div>
             </div>
