@@ -1,28 +1,37 @@
-export const fetchAnimeData = async (type: string, params?: { q?: string; status?: string; season?: string; year?: string; genres?: string; page?: number }) => {
+/**
+ * Mengambil rincian super lengkap (Karakter, Studio, Genre, Episode, dll)
+ * dalam satu kali panggil menggunakan teknik JSON:API Include
+ */
+export const getAnimeFullDetail = async (id: string): Promise<any> => {
   try {
-    const queryParams = new URLSearchParams();
-    
-    // Tambahkan parameter page ke query string
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.q) queryParams.append('q', params.q);
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.season) queryParams.append('season', params.season);
-    if (params?.year) queryParams.append('year', params.year);
-    if (params?.genres) queryParams.append('genres', params.genres);
-    
-    // Gunakan endpoint anime jika ada keyword 'q', jika tidak gunakan top
-    let endpoint = params?.q 
-      ? 'https://api.jikan.moe/v4/anime' 
-      : 'https://api.jikan.moe/v4/top/anime';
+    // Kita tambahkan parameter include agar Kitsu mengirimkan semua data relasi sekaligus
+    const includes = [
+      'genres',
+      'productions.producer',
+      'episodes',
+      'streamingLinks',
+      'mediaRelationships.destination'
+    ].join(',');
 
-    if (params?.season && params?.year) {
-      endpoint = `https://api.jikan.moe/v4/seasons/${params.year}/${params.season}`;
-    }
+    const res = await fetch(`https://kitsu.io/api/edge/anime/${id}?include=${includes}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json'
+      },
+      cache: 'no-store'
+    });
 
-    const res = await fetch(`${endpoint}?${queryParams.toString()}`);
-    return await res.json();
+    if (!res.ok) return null;
+    const result = await res.json();
+    
+    // Kita kembalikan data utama + data included-nya
+    return {
+      main: result.data,
+      included: result.included || []
+    };
   } catch (error) {
-    console.error("Core Service Error:", error);
-    return { data: [] };
+    console.error("Full Detail Fetch Error:", error);
+    return null;
   }
 };
