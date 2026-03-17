@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import WaifuCard from '@/components/Waifu/WaifuCard';
+import { getWaifuGallery } from '@/lib/waifu-service';
 
 const GENRES = [
-  { id: 'anime', label: 'Semua Anime' },
   { id: 'waifu', label: 'Waifu' },
   { id: 'neko', label: 'Neko' },
-  { id: 'vocaloid', label: 'Vocaloid' },
-  { id: 'genshin impact', label: 'Genshin Impact' },
-  { id: 'cyberpunk', label: 'Cyberpunk' },
-  { id: 'landscape anime', label: 'Scenery' },
+  { id: 'genshin impact', label: 'Genshin' },
+  { id: 'anime scenery', label: 'Scenery' },
+  { id: 'digital art', label: 'Digital' },
 ];
 
 export default function WaifuPage() {
@@ -21,100 +20,106 @@ export default function WaifuPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [category, setCategory] = useState('waifu');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isNsfw, setIsNsfw] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const [offset, setOffset] = useState<number | null>(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchImages = useCallback(async (isMore = false) => {
+  const requestIdRef = useRef(0);
+
+  // ✅ SOLUSI: Terima customOffset sebagai parameter untuk reset
+  const fetchImages = useCallback(async (isMore = false, customOffset?: number) => {
+    const requestId = ++requestIdRef.current;
+
     if (isMore) setLoadingMore(true);
     else setLoading(true);
 
-    const currentOffset = isMore ? offset : 0;
+    // Jika isMore pakai state offset, jika reset pakai customOffset (biasanya 0)
+    const currentOffset = isMore ? (offset ?? 0) : (customOffset ?? 0);
     const term = searchQuery.trim() || category;
 
     try {
-      // Panggil API Route lokal
-      const response = await fetch(`/api/deviantart?tag=${encodeURIComponent(term)}&offset=${currentOffset}&nsfw=false`);
-      const responseData = await response.json();
-      
-      // SYNC: Pastikan mengambil properti 'items' sesuai return dari API Route
-      const newItems = responseData.items || [];
+      const result = await getWaifuGallery(term, currentOffset, isNsfw);
+
+      if (requestId !== requestIdRef.current) return;
 
       if (isMore) {
         setData(prev => {
-          const combined = [...prev, ...newItems];
-          // Filter ID duplikat agar tidak error saat render key
-          return combined.filter((item, index, self) => 
-            index === self.findIndex((t) => t.id === item.id)
+          const combined = [...prev, ...result.items];
+          return combined.filter(
+            (item, index, self) =>
+              index === self.findIndex(t => t.id === item.id)
           );
         });
       } else {
-        setData(newItems);
+        setData(result.items);
       }
-      
-      setOffset(responseData.nextOffset);
-      setHasMore(responseData.hasMore);
-    } catch (err) {
-      console.error("Gagal Render Galeri:", err);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [category, offset, searchQuery]);
 
-  // Debounce search agar tidak terlalu sering menembak API
+      setOffset(result.nextOffset);
+      setHasMore(result.hasMore);
+    } catch (err) {
+      console.error("Fetch error on Page:", err);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    }
+  }, [category, searchQuery, offset, isNsfw]);
+
+  // ✅ SOLUSI: Kirim 0 langsung ke fetchImages saat filter berubah
   useEffect(() => {
     const timer = setTimeout(() => {
       setOffset(0);
-      fetchImages(false);
-    }, 500);
+      fetchImages(false, 0); 
+    }, 400);
+
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, searchQuery]);
+  }, [category, searchQuery, isNsfw]); // fetchImages sengaja tidak masuk agar tidak loop
 
   return (
     <div className="min-h-screen bg-[#060910] text-white flex flex-col overflow-x-hidden">
       <Navbar />
+
       <main className="w-full max-w-7xl mx-auto px-4 pt-28 pb-20 flex-grow">
-        
-        <div className="flex flex-col md:flex-row gap-6 mb-12 items-start md:items-center">
-          <div className="flex-1 space-y-2">
+        <div className="flex flex-col md:flex-row gap-6 mb-12 items-start md:items-center justify-between">
+          <div className="flex-1 text-left">
             <h1 className="text-4xl font-black italic uppercase tracking-tighter text-left">
-              Visual <span className="text-blue-500">Vault</span>
+              Visual <span className="text-blue-500 text-left">Vault</span>
             </h1>
-            <p className="text-gray-500 text-xs font-medium text-left">Eksplorasi karya seni digital dari komunitas global.</p>
+            <p className="text-gray-500 text-xs text-left">Temukan inspirasi karya seni digital.</p>
           </div>
 
           <div className="flex flex-wrap gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-72">
-              <input 
-                type="text" 
-                placeholder="Cari karakter spesifik..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-sm focus:border-blue-500 outline-none transition-all placeholder:text-gray-600"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Cari..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-sm focus:border-blue-500 outline-none text-white"
+            />
 
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="bg-white/5 border border-white/10 px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-3 hover:bg-white/10 text-white"
+                className="bg-white/5 border border-white/10 px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 text-white"
               >
-                {GENRES.find(g => g.id === category)?.label || 'Kategori'}
-                <svg className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 9l-7 7-7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                {GENRES.find(g => g.id === category)?.label}
+                <svg className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
               </button>
-              
+
               {isDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 w-52 bg-[#0d1117] border border-white/10 rounded-xl overflow-hidden z-[100] shadow-2xl">
+                <div className="absolute top-full right-0 mt-2 w-48 bg-[#0d1117] border border-white/10 rounded-xl overflow-hidden z-[50]">
                   {GENRES.map(g => (
-                    <button 
+                    <button
                       key={g.id}
-                      onClick={() => { setCategory(g.id); setIsDropdownOpen(false); setSearchQuery(''); }}
-                      className="w-full text-left px-5 py-3.5 text-xs font-bold hover:bg-blue-600 transition-colors border-b border-white/5 last:border-0 text-gray-300 hover:text-white"
+                      onClick={() => {
+                        setCategory(g.id);
+                        setSearchQuery('');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="block w-full px-4 py-3 text-left text-sm hover:bg-blue-600 transition-colors text-white"
                     >
                       {g.label}
                     </button>
@@ -122,39 +127,44 @@ export default function WaifuPage() {
                 </div>
               )}
             </div>
+
+            <button 
+              onClick={() => setIsNsfw(!isNsfw)}
+              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                isNsfw ? 'bg-red-600/20 border-red-500 text-red-500' : 'bg-white/5 border-white/10 text-gray-500'
+              }`}
+            >
+              NSFW {isNsfw ? 'ON' : 'OFF'}
+            </button>
           </div>
         </div>
 
-        {/* --- KONTEN GRID --- */}
         {loading && data.length === 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-5 animate-pulse">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-white/5 rounded-2xl animate-pulse" />
-            ))}
-          </div>
-        ) : data.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {data.map((item, idx) => (
-              <WaifuCard key={`${item.id}-${idx}`} image={item} />
+              <div key={i} className="aspect-[3/4] bg-white/5 rounded-2xl" />
             ))}
           </div>
         ) : (
-          <div className="py-40 text-center text-gray-600 italic">
-            {loading ? "Sedang mencari karya..." : "Wah, hasil pencarian kosong. Coba kata kunci lain ya!"}
-          </div>
-        )}
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+              {data.map((item, idx) => (
+                <WaifuCard key={`${item.id}-${idx}`} image={item} />
+              ))}
+            </div>
 
-        {/* --- LOAD MORE --- */}
-        {hasMore && !loading && data.length > 0 && (
-          <div className="mt-16 flex justify-center">
-            <button 
-              onClick={() => fetchImages(true)} 
-              disabled={loadingMore}
-              className="bg-blue-600/10 border border-blue-500/20 text-blue-400 px-10 py-4 rounded-full text-xs font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-lg active:scale-95 disabled:opacity-50"
-            >
-              {loadingMore ? 'Mengumpulkan data...' : 'Lihat Lebih Banyak'}
-            </button>
-          </div>
+            {hasMore && (
+              <div className="mt-16 text-center">
+                <button
+                  onClick={() => fetchImages(true)}
+                  disabled={loadingMore}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-3 rounded-full font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {loadingMore ? 'Memuat...' : 'Load More Content'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
       <Footer />
