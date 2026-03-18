@@ -49,6 +49,7 @@ export default function WaifuPage() {
   const [imgRatio,        setImgRatio]        = useState<'portrait' | 'landscape' | 'square'>('portrait'); // rasio gambar modal
   const [searchedAs,      setSearchedAs]      = useState<string>(''); // label strategi pencarian yang berhasil
   const [isFullscreen,    setIsFullscreen]    = useState(false);       // fullscreen gambar di dalam modal
+  const [sortMode,        setSortMode]        = useState<'newest' | 'popular'>('newest'); // urutan galeri
 
   const dropdownRef   = useRef<HTMLDivElement>(null);
   const requestIdRef  = useRef(0);
@@ -134,7 +135,7 @@ export default function WaifuPage() {
     const term = searchQuery.trim() || category;
 
     try {
-      const result = await getWaifuGallery(term, currentOffset, isNsfw);
+      const result = await getWaifuGallery(term, currentOffset, isNsfw, sortMode);
       if (requestId !== requestIdRef.current) return;
 
       if (result && 'error' in result && result.error) {
@@ -180,12 +181,12 @@ export default function WaifuPage() {
     fetchImages(false, 0);
   };
 
-  // Fetch saat category / isNsfw berubah
+  // Fetch saat category / isNsfw / sortMode berubah
   useEffect(() => {
     setOffset(0);
     const t = setTimeout(() => fetchImages(false, 0), 100);
     return () => clearTimeout(t);
-  }, [category, isNsfw]);
+  }, [category, isNsfw, sortMode]);
 
   // Debounce search — fetch otomatis saat mengetik, tanpa perlu tekan enter
   useEffect(() => {
@@ -335,6 +336,28 @@ export default function WaifuPage() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Sort Toggle: Terbaru / Populer */}
+                <div className="flex rounded-xl overflow-hidden"
+                  style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+                  {(['newest', 'popular'] as const).map(mode => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setSortMode(mode)}
+                      className="px-3 py-3 text-[9px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 whitespace-nowrap"
+                      style={{
+                        background: sortMode === mode
+                          ? 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(190,24,93,0.15))'
+                          : 'transparent',
+                        color: sortMode === mode ? '#f472b6' : 'rgba(255,255,255,0.3)',
+                        borderRight: mode === 'newest' ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      }}
+                    >
+                      {mode === 'newest' ? '🆕 Terbaru' : '🔥 Populer'}
+                    </button>
+                  ))}
                 </div>
 
                 {/* NSFW Toggle */}

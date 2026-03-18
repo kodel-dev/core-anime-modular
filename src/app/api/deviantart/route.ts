@@ -9,7 +9,7 @@ async function getClientCredentialsToken() {
     return cachedClientToken;
   }
 
-  const clientId = process.env.DEVIANTART_CLIENT_ID;
+  const clientId     = process.env.DEVIANTART_CLIENT_ID;
   const clientSecret = process.env.DEVIANTART_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
@@ -20,8 +20,8 @@ async function getClientCredentialsToken() {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
+      grant_type:    'client_credentials',
+      client_id:     clientId,
       client_secret: clientSecret,
     }),
   });
@@ -35,54 +35,37 @@ async function getClientCredentialsToken() {
   return cachedClientToken;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: format bytes → "8.28 MB"
-// ─────────────────────────────────────────────────────────────────────────────
 function formatFileSize(bytes: number): string {
   if (!bytes) return '';
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes >= 1024)        return `${(bytes / 1024).toFixed(1)} KB`;
   return `${bytes} B`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Fetch metadata lengkap satu deviation — dipanggil HANYA saat klik detail card
-// Tujuan: agar load gallery tetap cepat (1 request), metadata di-fetch on-demand
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Metadata on-demand (dipanggil saat klik kartu) ────────────────────────────
 async function fetchDeviationMeta(deviationId: string, token: string) {
   try {
     const [metaRes, contentRes, deviationRes] = await Promise.all([
-      // tags, stats (favorites, views, comments), isAiGenerated
       fetch(
         `https://www.deviantart.com/api/v1/oauth2/deviation/metadata` +
         `?deviationids[]=${deviationId}&ext_stats=1&ext_submission=1`,
         { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
       ),
-      // deskripsi HTML
       fetch(
         `https://www.deviantart.com/api/v1/oauth2/deviation/content?deviationid=${deviationId}`,
         { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
       ),
-      // resolusi asli, ukuran file, nama file, avatar author
       fetch(
         `https://www.deviantart.com/api/v1/oauth2/deviation/${deviationId}`,
         { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
       ),
     ]);
 
-    let tags: string[]    = [];
-    let description       = '';
-    let favorites         = 0;
-    let views             = 0;
-    let comments          = 0;
-    let isAiGenerated     = false;
-    let authorAvatar      = '';
-    let downloadFilesize  = '';
-    let downloadWidth     = 0;
-    let downloadHeight    = 0;
-    let downloadFilename  = '';
+    let tags: string[] = [], description = '';
+    let favorites = 0, views = 0, comments = 0, isAiGenerated = false;
+    let authorAvatar = '', downloadFilesize = '', downloadWidth = 0;
+    let downloadHeight = 0, downloadFilename = '';
 
-    // /deviation/metadata
     if (metaRes.ok) {
       const metaData = await metaRes.json();
       const meta = metaData.metadata?.[0];
@@ -100,13 +83,11 @@ async function fetchDeviationMeta(deviationId: string, token: string) {
       }
     }
 
-    // /deviation/content — fallback deskripsi
     if (contentRes.ok && !description) {
       const c = await contentRes.json();
       if (c.html) description = c.html.replace(/<[^>]*>/g, '').trim().slice(0, 800);
     }
 
-    // /deviation/:id — file info + avatar
     if (deviationRes.ok) {
       const dev = await deviationRes.json();
       authorAvatar     = dev.author?.usericon ?? '';
@@ -134,9 +115,31 @@ async function fetchDeviationMeta(deviationId: string, token: string) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET handler
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Format satu item deviation ─────────────────────────────────────────────────
+function formatItem(item: any) {
+  const imageUrl =
+    item.content?.src ||
+    item.preview?.src ||
+    item.thumbs?.[0]?.src;
+
+  if (!imageUrl) return null;
+
+  return {
+    id:           item.deviationid,
+    url:          imageUrl,
+    title:        item.title,
+    author:       item.author?.username || 'Unknown',
+    authorAvatar: item.author?.usericon || null,
+    preview:      item.preview?.src || item.thumbs?.[0]?.src || imageUrl,
+    publishedTime: item.published_time,
+    isMature:     item.is_mature,
+    width:        item.content?.width  || item.preview?.width  || 0,
+    height:       item.content?.height || item.preview?.height || 0,
+    filesize:     formatFileSize(item.content?.filesize || 0),
+  };
+}
+
+// ── GET handler ────────────────────────────────────────────────────────────────
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -145,26 +148,38 @@ export async function GET(request: Request) {
     const userToken = cookieStore.get('da_access_token')?.value;
     const token = userToken || await getClientCredentialsToken();
 
-    // ── Mode detail: ?id=xxx → metadata on-demand saat klik kartu ────────────
+    // ── Mode detail: ?id=xxx ─────────────────────────────────────────────────
     const deviationId = searchParams.get('id');
     if (deviationId) {
       const meta = await fetchDeviationMeta(deviationId, token as string);
       return NextResponse.json(meta);
     }
 
-    // ── Mode gallery (kode asli tidak diubah) ─────────────────────────────────
-    const tag    = searchParams.get('tag')    || 'trending';
+    // ── Mode gallery ─────────────────────────────────────────────────────────
+    const tag    = searchParams.get('tag')    || 'anime';
     const offset = searchParams.get('offset') || '0';
     const nsfw   = searchParams.get('nsfw')   === 'true';
+    // sort: 'newest' | 'popular' | 'trending'
+    // default ke 'newest' supaya data selalu segar
+    const sort   = searchParams.get('sort')   || 'newest';
 
     let daUrl: URL;
 
-    if (tag.toLowerCase() === 'trending') {
+    // Prioritas: tag=trending SELALU ke browse/home, tidak peduli sort
+    if (tag === 'trending') {
       daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/home');
+
+    } else if (sort === 'newest') {
+      // browse/newest — diurut dari paling baru diunggah
+      // endpoint ini pakai parameter `q` (query string), bukan `tag`
+      daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/newest');
+      daUrl.searchParams.set('q', tag);
+
     } else {
+      // browse/tags — filter kategori spesifik, diurut popular
       daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/tags');
-      const formattedTag = tag.replace(/\s+/g, '').toLowerCase();
-      daUrl.searchParams.set('tag', formattedTag);
+      // DeviantArt browse/tags tidak terima spasi — hapus spasi dari tag
+      daUrl.searchParams.set('tag', tag.replace(/\s+/g, '').toLowerCase());
     }
 
     daUrl.searchParams.set('offset', offset);
@@ -178,11 +193,13 @@ export async function GET(request: Request) {
 
     if (!res.ok) {
       const errorBody = await res.text();
-      console.error(`API Error ${res.status}:`, errorBody);
+      console.error(`DeviantArt API Error ${res.status}:`, errorBody);
       return NextResponse.json(
         {
-          error: `API Error: ${res.status}`,
-          detail: userToken ? 'Token expired atau izin ditolak' : 'Wajib Login untuk konten NSFW',
+          error:  `API Error: ${res.status}`,
+          detail: userToken
+            ? 'Token expired atau izin ditolak'
+            : 'Coba login untuk konten eksklusif',
         },
         { status: res.status }
       );
@@ -191,30 +208,7 @@ export async function GET(request: Request) {
     const data = await res.json();
 
     const formattedResults = (data.results || [])
-      .map((item: any) => {
-        const imageUrl =
-          item.content?.src ||
-          item.preview?.src ||
-          item.thumbs?.[0]?.src;
-
-        if (!imageUrl) return null;
-
-        return {
-          id:            item.deviationid,
-          url:           imageUrl,
-          title:         item.title,
-          author:        item.author?.username || 'Unknown',
-          authorAvatar:  item.author?.usericon || null,
-          preview:       item.preview?.src || item.thumbs?.[0]?.src || imageUrl,
-          publishedTime: item.published_time,
-          isMature:      item.is_mature,
-          width:         item.content?.width  || item.preview?.width  || 0,
-          height:        item.content?.height || item.preview?.height || 0,
-          filesize:      formatFileSize(item.content?.filesize || 0),
-          // tags, description, favorites, views, comments, isAiGenerated
-          // → di-fetch on-demand via GET /api/deviantart?id=xxx saat klik kartu
-        };
-      })
+      .map(formatItem)
       .filter(Boolean);
 
     return NextResponse.json({
