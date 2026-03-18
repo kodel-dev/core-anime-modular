@@ -39,27 +39,38 @@ async function getClientCredentialsToken() {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const tag = searchParams.get('tag') || 'anime';
+    const tag = searchParams.get('tag') || 'trending'; 
     const offset = searchParams.get('offset') || '0';
     const nsfw = searchParams.get('nsfw') === 'true';
 
     // ✅ AMBIL TOKEN DARI LOGIN USER (Jika ada di Cookie)
     const cookieStore = await cookies();
-    const userToken = (await cookieStore).get('da_access_token')?.value;
+    const userToken = cookieStore.get('da_access_token')?.value;
 
-    // Gunakan userToken jika tersedia agar konten mature (NSFW) bisa terbuka
     const token = userToken || await getClientCredentialsToken();
 
-    const daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/tags');
-    daUrl.searchParams.set('tag', tag);
+    let daUrl: URL;
+
+    // 🔥 LOGIKA BARU: Penyesuaian dengan API DeviantArt terbaru
+    if (tag.toLowerCase() === 'trending') {
+      // Gunakan /browse/home untuk data terpopuler/terbaru di halaman awal
+      daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/home');
+    } else {
+      // Gunakan /browse/tags untuk pencarian
+      daUrl = new URL('https://www.deviantart.com/api/v1/oauth2/browse/tags');
+      
+      // Trik untuk spasi: "Gojo Satoru" -> "gojosatoru" agar API DeviantArt bisa membacanya
+      const formattedTag = tag.replace(/\s+/g, '').toLowerCase();
+      daUrl.searchParams.set('tag', formattedTag);
+    }
+    
     daUrl.searchParams.set('offset', offset);
     daUrl.searchParams.set('limit', '24');
-    
-    // ✅ Parameter wajib untuk membuka konten dewasa
     daUrl.searchParams.set('mature_content', String(nsfw));
 
     const res = await fetch(daUrl.toString(), {
       headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store'
     });
 
     if (!res.ok) {
@@ -78,8 +89,6 @@ export async function GET(request: Request) {
 
     const formattedResults = (data.results || [])
       .map((item: any) => {
-        // ✅ SOLUSI AGAR TIDAK BLUR: 
-        // Utamakan content.src (resolusi asli) atau preview.src daripada thumbs
         const imageUrl =
           item.content?.src ||
           item.preview?.src ||
@@ -90,7 +99,9 @@ export async function GET(request: Request) {
         return {
           id: item.deviationid,
           url: imageUrl,
-          name: item.title,
+          title: item.title, 
+          author: item.author?.username || 'Unknown',
+          preview: imageUrl 
         };
       })
       .filter(Boolean);
@@ -99,7 +110,7 @@ export async function GET(request: Request) {
       items: formattedResults,
       nextOffset: data.next_offset ?? null,
       hasMore: data.has_more ?? false,
-      isUserLoggedIn: !!userToken // Info tambahan untuk UI
+      isUserLoggedIn: !!userToken 
     });
 
   } catch (error: any) {

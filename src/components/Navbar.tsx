@@ -9,18 +9,31 @@ const SECTORS = [
   { id: '/',       label: 'Discovery' },
   { id: '/manga',  label: 'Reading'   },
   { id: '/waifu',  label: 'Gallery'   },
-  { id: '/neko',   label: 'Neko'      },
 ];
 
 export default function Navbar() {
   const pathname  = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  /* subtle background shift on scroll */
+  /* Sinkronkan status login sederhana dari cookie */
   useEffect(() => {
+    const checkAuth = () => {
+      const hasToken = document.cookie.includes('da_access_token');
+      setIsLoggedIn(hasToken);
+    };
+
+    checkAuth();
     const onScroll = () => setScrolled(window.scrollY > 12);
+    
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    // Interval kecil untuk memastikan UI update jika cookie berubah
+    const interval = setInterval(checkAuth, 2000);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -35,8 +48,7 @@ export default function Navbar() {
 
         {/* ── Logo ── */}
         <Link href="/" className="group flex items-center gap-3 shrink-0">
-          {/* Kontainer logo dibuat bulat dengan rounded-full dan overflow-hidden */}
-          <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(37,99,235,0.45)] group-hover:shadow-[0_0_25px_rgba(37,99,235,0.7)] ring-1 ring-white/10 group-hover:ring-blue-500/50">
+          <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(37,99,235,0.45)] group-hover:shadow-[0_0_25px_rgba(37,99,235,0.7)] ring-1 ring-white/10 group-hover:ring-blue-500/50">
             <Image 
               src="/logo.png" 
               alt="CoreAnime Logo" 
@@ -45,13 +57,13 @@ export default function Navbar() {
               className="object-cover transition-all duration-300"
             />
           </div>
-          <span className="hidden sm:block text-[16px] md:text-[19px] font-black italic uppercase tracking-tight text-white leading-none">
+          <span className="hidden sm:block text-[16px] md:text-[18px] font-black italic uppercase tracking-tight text-white leading-none">
             Core<span className="text-blue-500">Anime</span>
           </span>
         </Link>
 
         {/* ── Nav links ── */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-grow justify-center">
           {SECTORS.map((s) => {
             const active = pathname === s.id;
             return (
@@ -68,13 +80,33 @@ export default function Navbar() {
                 {active && (
                   <span
                     className="absolute bottom-0.5 left-3 right-3 h-[2px] rounded-full
-                               bg-blue-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]
+                               bg-blue-500 shadow-[0_0_8px_rgba(37,99,235,0.8)]
                                animate-in fade-in zoom-in-50 duration-300"
                   />
                 )}
               </Link>
             );
           })}
+        </div>
+
+        {/* ── Auth Button ── */}
+        <div className="shrink-0 pl-2 border-l border-white/10">
+          {isLoggedIn ? (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all duration-300"
+            >
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              Account
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="px-4 py-2 rounded-xl bg-white text-black text-[9px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-lg active:scale-95"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
       </div>

@@ -2,14 +2,19 @@ export const getWaifuGallery = async (category: string, offset: number = 0, isNs
   try {
     const response = await fetch(
       `/api/deviantart?tag=${encodeURIComponent(category)}&offset=${offset}&nsfw=${isNsfw}`,
-      { cache: 'no-store' } // Memastikan kita tidak mengambil data lama yang rusak
+      { cache: 'no-store' }
     );
 
+    // Menangani error dari API tanpa melakukan throw (mencegah aplikasi crash)
+    if (response.status === 429) {
+      return { items: [], nextOffset: null, hasMore: false, error: 429 };
+    }
+
+    if (response.status === 401) {
+      return { items: [], nextOffset: null, hasMore: false, error: 401 };
+    }
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Fetch error status: ${response.status}`, errorText);
-      
-      // Jika error 429, kita beri tahu UI untuk berhenti mencoba sementara
       return { items: [], nextOffset: null, hasMore: false, error: response.status };
     }
 
@@ -21,7 +26,8 @@ export const getWaifuGallery = async (category: string, offset: number = 0, isNs
       hasMore: data.hasMore ?? false,
     };
   } catch (error) {
+    // Menangkap error jika server API mati, timeout, atau koneksi internet pengguna terputus
     console.error("Waifu Service Error:", error);
-    return { items: [], nextOffset: null, hasMore: false };
+    return { items: [], nextOffset: null, hasMore: false, error: 500 };
   }
 };
