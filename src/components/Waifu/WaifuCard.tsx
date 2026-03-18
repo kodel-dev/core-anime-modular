@@ -6,38 +6,104 @@ import { useState } from 'react';
 interface WaifuCardProps {
   image: any;
   isNsfwLocked?: boolean;
+  onCardClick?: (image: any) => void;
 }
 
-export default function WaifuCard({ image, isNsfwLocked }: WaifuCardProps) {
+export default function WaifuCard({ image, isNsfwLocked, onCardClick }: WaifuCardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const imageUrl = image.preview || image.url;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(imageUrl)}`;
+
+  // isMature = konten dewasa yang masih bisa dilihat (jika NSFW on)
+  // isNsfwLocked = isMature tapi NSFW off → tampilkan dengan lock
+  const isLocked = isNsfwLocked || false;
+
   return (
-    <div className="group relative aspect-[3/4.5] bg-[#161b22] rounded-3xl overflow-hidden border border-white/5 shadow-lg">
+    <div
+      onClick={() => !isLocked && onCardClick && onCardClick(image)}
+      className={`group relative aspect-[3/4.5] rounded-2xl overflow-hidden ${!isLocked ? 'cursor-pointer' : 'cursor-default'}`}
+      style={{
+        background: '#0f1219',
+        boxShadow: '0 0 0 1px rgba(255,255,255,0.06)',
+        transition: 'transform 0.3s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s ease',
+      }}
+      onMouseEnter={e => {
+        if (isLocked) return;
+        const el = e.currentTarget as HTMLElement;
+        el.style.transform = 'translateY(-3px)';
+        el.style.boxShadow = '0 0 0 1px rgba(236,72,153,0.4), 0 20px 50px -12px rgba(236,72,153,0.2)';
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.transform = 'translateY(0)';
+        el.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.06)';
+      }}
+    >
+      {/* Skeleton */}
+      {!isLoaded && (
+        <div
+          className="absolute inset-0 animate-pulse"
+          style={{ background: 'linear-gradient(110deg, #0f1219 30%, #1a2030 50%, #0f1219 70%)' }}
+        />
+      )}
+
+      {/* Gambar — blur jika terkunci */}
       <Image
-        src={image.preview || image.url}
+        src={proxyUrl}
         alt={image.title}
         fill
-        className={`object-cover transition-all duration-700 ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        } ${isNsfwLocked ? 'blur-2xl scale-110 grayscale' : 'blur-0'}`} // Efek Blur di sini
+        className="object-cover duration-700 group-hover:scale-[1.06]"
+        style={{
+          opacity: isLoaded ? 1 : 0,
+          transition: 'opacity 0.5s ease, transform 0.7s ease',
+          filter: isLocked ? 'blur(18px) brightness(0.6)' : 'none',
+          transform: isLocked ? 'scale(1.12)' : undefined,
+        }}
         onLoadingComplete={() => setIsLoaded(true)}
         unoptimized
       />
 
-      {/* Overlay Peringatan jika terkunci */}
-      {isNsfwLocked && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-center">
-          <svg className="w-8 h-8 text-white/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Content Locked</p>
+      {/* Overlay lock untuk konten mature (NSFW off) */}
+      {isLocked && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">
+            18+ · Aktifkan NSFW
+          </span>
         </div>
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-5 flex flex-col justify-end">
-        <h3 className="text-xs font-bold truncate">{image.title}</h3>
-        <p className="text-[10px] text-gray-400">@{image.author}</p>
-      </div>
+      {/* Hover Overlay — nama & author saja, tanpa tombol unduh */}
+      {!isLocked && (
+        <div
+          className="absolute inset-0 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(to top, rgba(5,5,15,0.97) 0%, rgba(5,5,15,0.45) 55%, transparent 100%)',
+          }}
+        >
+          <div className="p-3 sm:p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+            <p className="text-[11px] sm:text-xs font-bold text-white truncate leading-tight">
+              {image.title}
+            </p>
+            <p className="text-[10px] mt-0.5 font-medium truncate" style={{ color: '#f472b6' }}>
+              @{image.author}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
