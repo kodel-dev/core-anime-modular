@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
   
-  // Deteksi host secara dinamis
+  // Deteksi host dan protokol secara dinamis agar bisa jalan di localhost & vercel
   const host = request.headers.get('host');
   const protocol = host?.includes('localhost') ? 'http' : 'https';
   const baseUrl = `${protocol}://${host}`;
@@ -33,10 +33,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=token_failed', request.url));
     }
 
-    // Simpan token di Cookie
+    // Simpan token di Cookie agar bisa digunakan oleh aplikasi
     const res = NextResponse.redirect(new URL('/waifu', request.url));
     res.cookies.set('da_access_token', data.access_token, {
-      httpOnly: false, 
+      httpOnly: false, // Set false agar bisa dibaca di client-side jika diperlukan
       secure: process.env.NODE_ENV === 'production',
       maxAge: data.expires_in,
       path: '/',

@@ -8,12 +8,24 @@ import WaifuCard from '@/components/Waifu/WaifuCard';
 import { getWaifuGallery } from '@/lib/waifu-service';
 
 const GENRES = [
-  { id: 'trending',      label: '🔥 Trending'  },
-  { id: 'waifu',         label: 'Waifu'         },
-  { id: 'neko',          label: 'Neko'          },
-  { id: 'genshin impact',label: 'Genshin'       },
-  { id: 'anime scenery', label: 'Scenery'       },
-  { id: 'digital art',   label: 'Digital Art'   },
+  { id: 'trending',               label: '🔥 Trending'       },
+  { id: 'anime',                  label: '🎌 Anime'           },
+  { id: 'waifu',                  label: '✨ Waifu'           },
+  { id: 'video game fan art',     label: '🎮 Video Game'      },
+  { id: 'boku no hero academia',  label: '🦸 MHA'             },
+  { id: 'naruto',                 label: '🍥 Naruto'          },
+  { id: 'league of legends',      label: '⚔️ LoL'             },
+  { id: 'genshin impact',         label: '🌸 Genshin'         },
+  { id: 'overwatch',              label: '🎯 Overwatch'       },
+  { id: 'digimon',                label: '👾 Digimon'         },
+  { id: 'demon',                  label: '😈 Demons'          },
+  { id: 'angel',                  label: '👼 Angels'          },
+  { id: 'mecha',                  label: '🤖 Mecha'           },
+  { id: 'concept art',            label: '🖌️ Concept Art'     },
+  { id: 'drawings and paintings', label: '🎨 Ilustrasi'       },
+  { id: 'skyscape',               label: '🌅 Landscape'       },
+  { id: 'neko',                   label: '🐱 Neko'            },
+  { id: 'spider-man',             label: '🕷️ Spider-Man'      },
 ];
 
 export default function WaifuPage() {
@@ -34,6 +46,7 @@ export default function WaifuPage() {
   const [translatedDesc,  setTranslatedDesc]  = useState('');
   const [isTranslatingDesc, setIsTranslatingDesc] = useState(false);
   const [isDescExpanded,  setIsDescExpanded]  = useState(false);
+  const [imgRatio,        setImgRatio]        = useState<'portrait' | 'landscape' | 'square'>('portrait'); // rasio gambar modal
   const [searchedAs,      setSearchedAs]      = useState<string>(''); // label strategi pencarian yang berhasil
 
   const dropdownRef   = useRef<HTMLDivElement>(null);
@@ -61,7 +74,21 @@ export default function WaifuPage() {
   const handleCardClick = async (img: any) => {
     setSelectedImage(img);
     setTranslatedDesc('');
+    setImgRatio('portrait'); // reset dulu, deteksi ulang
     setIsFetchingMeta(true);
+
+    // Deteksi rasio gambar sebelum modal muncul
+    if (img.url || img.preview) {
+      const probeUrl = `/api/proxy?url=${encodeURIComponent(img.preview || img.url)}`;
+      const tempImg = new window.Image();
+      tempImg.onload = () => {
+        const ratio = tempImg.naturalWidth / tempImg.naturalHeight;
+        if (ratio > 1.15) setImgRatio('landscape');
+        else if (ratio < 0.87) setImgRatio('portrait');
+        else setImgRatio('square');
+      };
+      tempImg.src = probeUrl;
+    }
     try {
       const res = await fetch(`/api/deviantart?id=${img.id}`);
       if (res.ok) {
@@ -361,18 +388,40 @@ export default function WaifuPage() {
               <span className="inline-block w-3 h-3 rounded-full border-2 border-pink-500 border-t-transparent animate-spin" />
               {searchQuery ? `Lagi nyari "${searchQuery}" di seluruh galeri...` : 'Memuat galeri terbaik untuk kamu...'}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+            <div
+              style={{
+                columns: 'auto',
+                columnWidth: 'clamp(150px, 20vw, 230px)',
+                columnGap: '12px',
+              }}
+            >
               {[...Array(10)].map((_, i) => (
-                <div key={i} className="aspect-[3/4.5] rounded-2xl animate-pulse"
-                  style={{ background: 'linear-gradient(110deg,#0f1219 30%,#1a2030 50%,#0f1219 70%)', animationDelay: `${i * 60}ms` }} />
+                <div key={i} className="mb-3 sm:mb-4 break-inside-avoid animate-pulse rounded-2xl"
+                  style={{
+                    // Variasikan tinggi skeleton supaya terlihat natural
+                    paddingBottom: ['133%','100%','120%','150%','83%','133%','100%','120%','133%','83%'][i % 10],
+                    background: 'linear-gradient(110deg,#0f1219 30%,#1a2030 50%,#0f1219 70%)',
+                    animationDelay: `${i * 60}ms`,
+                  }}
+                />
               ))}
             </div>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+            {/* Masonry grid — gambar menyesuaikan rasio alami, tidak terpotong */}
+            <div
+              className="gap-3 sm:gap-4"
+              style={{
+                columns: 'auto',
+                columnWidth: 'clamp(150px, 20vw, 230px)',
+                columnGap: '12px',
+              }}
+            >
               {safeData.map((item, i) => (
-                <WaifuCard key={`${item?.id || i}-${i}`} image={item} onCardClick={handleCardClick} />
+                <div key={`${item?.id || i}-${i}`} className="mb-3 sm:mb-4 break-inside-avoid">
+                  <WaifuCard image={item} onCardClick={handleCardClick} />
+                </div>
               ))}
             </div>
 
@@ -433,14 +482,18 @@ export default function WaifuPage() {
             onClick={() => setSelectedImage(null)}
           >
             <div
-              className="relative w-full sm:max-w-[880px] flex flex-col md:flex-row overflow-hidden"
+              className={`relative w-full overflow-hidden ${
+                imgRatio === 'landscape'
+                  ? 'sm:max-w-[95vw] md:max-w-[860px] flex flex-col'
+                  : 'sm:max-w-[820px] flex flex-col md:flex-row'
+              }`}
               style={{
                 background: 'linear-gradient(145deg, #0e1320 0%, #0a0d14 100%)',
                 border: '1px solid rgba(255,255,255,0.07)',
                 borderRadius: 'clamp(1rem,3vw,1.5rem)',
                 boxShadow: '0 40px 100px -20px rgba(236,72,153,0.18)',
                 maxHeight: '92dvh',
-                height: '92dvh',
+                height: imgRatio === 'landscape' ? 'auto' : '92dvh',
               }}
               onClick={e => e.stopPropagation()}
             >
@@ -465,22 +518,39 @@ export default function WaifuPage() {
                 </svg>
               </button>
 
-              {/* ── Kiri: Gambar ── */}
-              <div className="relative w-full md:w-[48%] flex-shrink-0 overflow-hidden"
+              {/* ── Gambar — adaptive layout ── */}
+              <div
+                className={`relative flex-shrink-0 overflow-hidden ${
+                  imgRatio === 'landscape' ? 'w-full' : 'w-full md:w-[46%]'
+                }`}
                 style={{
-                  minHeight: '260px',
-                  // mobile: fixed height; md+ fills full modal height via flex
-                  height: 'clamp(260px, 50vw, 100%)',
-                  background: '#0a0c12',
-                }}>
-                <div className="absolute inset-0 opacity-20 pointer-events-none"
-                  style={{ background: 'radial-gradient(ellipse at 50% 70%, rgba(236,72,153,0.2) 0%, transparent 70%)' }} />
+                  background: '#06080f',
+                  // Portrait: isi tinggi penuh modal di desktop
+                  // Landscape: tinggi berdasarkan rasio gambar supaya tidak crop
+                  // Square: tinggi sedang
+                  height: imgRatio === 'landscape'
+                    ? 'clamp(200px, 56vw, 480px)'
+                    : imgRatio === 'square'
+                    ? 'clamp(260px, 46vw, 100%)'
+                    : 'clamp(280px, 55vw, 100%)',
+                }}
+              >
+                {/* Background blur placeholder */}
+                <Image
+                  src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`}
+                  alt=""
+                  fill
+                  className="object-cover scale-110 blur-xl opacity-30"
+                  unoptimized
+                  aria-hidden
+                />
+                {/* Gambar utama — object-contain supaya tidak crop, tapi background tetap gelap */}
                 <Image
                   src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`}
                   alt={selectedImage.title}
                   fill
-                  className="object-cover"
-                  style={{ filter: 'brightness(0.95)' }}
+                  className="object-contain relative z-10"
+                  style={{ filter: 'drop-shadow(0 4px 32px rgba(0,0,0,0.6))' }}
                   unoptimized
                 />
                 {(selectedImage.favorites > 0 || selectedImage.views > 0) && (
@@ -507,9 +577,15 @@ export default function WaifuPage() {
                 )}
               </div>
 
-              {/* ── Kanan: Info ── */}
-              <div className="flex flex-col flex-1 min-h-0 overflow-hidden"
-                style={{ borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+              {/* ── Info panel ── */}
+              <div
+                className="flex flex-col flex-1 min-h-0 overflow-hidden"
+                style={{
+                  borderLeft: imgRatio === 'landscape' ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                  borderTop: imgRatio === 'landscape' ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  maxHeight: imgRatio === 'landscape' ? '50vh' : undefined,
+                }}
+              >
                 <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0">
 
                   {/* Brand */}
