@@ -38,50 +38,60 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 inset-x-0 z-[100] transition-all duration-300
+      className={`fixed top-0 inset-x-0 z-[100] transition-all duration-500
                   ${scrolled
-                    ? 'bg-[#060910]/95 backdrop-blur-2xl border-b border-white/[0.07] shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-                    : 'bg-[#060910]/70 backdrop-blur-xl border-b border-transparent'
+                    ? 'bg-black/70 backdrop-blur-3xl border-b border-blue-500/20 shadow-[0_8px_32px_rgba(37,99,235,0.15)]'
+                    : 'bg-black/40 backdrop-blur-lg border-b border-transparent'
                   }`}
     >
-      <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 h-16 sm:h-18 md:h-20 flex items-center justify-between gap-2 sm:gap-3 md:gap-6">
 
         {/* ── Logo ── */}
-        <Link href="/" className="group flex items-center gap-3 shrink-0">
-          <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(37,99,235,0.45)] group-hover:shadow-[0_0_25px_rgba(37,99,235,0.7)] ring-1 ring-white/10 group-hover:ring-blue-500/50">
+        <Link href="/" className="group flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+          <div className="relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg overflow-hidden transition-all duration-300 group-hover:scale-110 shadow-[0_0_15px_rgba(37,99,235,0.4)] group-hover:shadow-[0_0_25px_rgba(37,99,235,0.7)] ring-2 ring-blue-500/30 group-hover:ring-blue-500/60 flex-shrink-0">
             <Image 
               src="/logo.png" 
               alt="CoreAnime Logo" 
               fill
-              sizes="(max-width: 768px) 40px, 48px"
-              className="object-cover transition-all duration-300"
+              sizes="(max-width: 640px) 36px, (max-width: 768px) 40px, 48px"
+              className="object-cover"
             />
           </div>
-          <span className="hidden sm:block text-[16px] md:text-[18px] font-black italic uppercase tracking-tight text-white leading-none">
-            Core<span className="text-blue-500">Anime</span>
-          </span>
+          <div className="hidden sm:flex flex-col leading-tight min-w-0">
+            <span className="text-xs sm:text-sm md:text-lg font-black italic uppercase tracking-tight text-white">
+              Core<span className="text-blue-400">Anime</span>
+            </span>
+            <span className="text-[8px] sm:text-[9px] md:text-xs text-gray-500 uppercase tracking-widest">Portal</span>
+          </div>
         </Link>
 
         {/* ── Nav links ── */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-grow justify-center">
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar flex-grow justify-center px-2 sm:px-0">
           {SECTORS.map((s) => {
             const active = pathname === s.id;
             return (
               <Link
                 key={s.id}
                 href={s.id}
-                className={`relative px-3 md:px-4 py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-[0.18em] md:tracking-[0.22em] whitespace-nowrap transition-all duration-200 ${
+                className={`relative px-2.5 sm:px-3 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-bold uppercase text-[9px] sm:text-xs md:text-sm tracking-widest whitespace-nowrap transition-all duration-300 group flex-shrink-0 ${
                   active
-                    ? 'text-blue-400 bg-blue-600/10'
-                    : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+                    ? 'text-blue-300 bg-blue-600/15'
+                    : 'text-gray-400 hover:text-blue-300 hover:bg-blue-600/10'
                 }`}
               >
                 {s.label}
                 {active && (
                   <span
-                    className="absolute bottom-0.5 left-3 right-3 h-[2px] rounded-full
-                               bg-blue-500 shadow-[0_0_8px_rgba(37,99,235,0.8)]
+                    className="absolute -bottom-1 left-1.5 right-1.5 sm:left-2 sm:right-2 h-1 rounded-full
+                               bg-gradient-to-r from-blue-500 to-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.8)]
                                animate-in fade-in zoom-in-50 duration-300"
+                  />
+                )}
+                {!active && (
+                  <span
+                    className="absolute -bottom-1 left-1.5 right-1.5 sm:left-2 sm:right-2 h-0.5 rounded-full
+                               bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-0
+                               group-hover:opacity-100 transition-opacity duration-300"
                   />
                 )}
               </Link>
@@ -90,21 +100,25 @@ export default function Navbar() {
         </div>
 
         {/* ── Auth Button ── */}
-        <div className="shrink-0 pl-2 border-l border-white/10">
+        <div className="shrink-0 pl-2 sm:pl-3 md:pl-4 border-l border-blue-500/20">
           {isLoggedIn ? (
             <Link
               href="/login"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all duration-300"
+              className="flex items-center justify-center gap-1.5 sm:gap-2 w-9 h-9 sm:w-10 sm:h-10 md:w-auto md:px-5 md:py-2.5 md:rounded-full rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold uppercase tracking-widest hover:from-blue-500 hover:to-blue-600 hover:shadow-[0_0_20px_rgba(37,99,235,0.6)] transition-all duration-300 group relative shadow-[0_4px_12px_rgba(37,99,235,0.3)]"
+              title="Dashboard"
             >
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Account
+              <div className="md:hidden flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-400 text-blue-900 text-xs font-bold animate-pulse">
+                ✓
+              </div>
+              <span className="hidden md:inline text-xs">Dashboard</span>
             </Link>
           ) : (
             <Link
               href="/login"
-              className="px-4 py-2 rounded-xl bg-white text-black text-[9px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-lg active:scale-95"
+              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-[10px] sm:text-xs md:text-xs uppercase tracking-widest hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_25px_rgba(37,99,235,0.5)] active:scale-95 transform whitespace-nowrap"
             >
-              Login
+              <span className="hidden sm:inline">Login</span>
+              <span className="sm:hidden">Sign</span>
             </Link>
           )}
         </div>

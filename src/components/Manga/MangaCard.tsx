@@ -189,7 +189,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
       {/* ═══ CARD ═══ */}
       <div
         onClick={() => setIsPreviewOpen(true)}
-        className="group relative overflow-hidden rounded-2xl bg-[#0d1117] border border-white/5
+        className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-[#0d1117] border border-white/5
                    hover:border-indigo-500/50 hover:shadow-[0_8px_40px_rgba(99,102,241,0.12)]
                    cursor-pointer transition-all duration-500"
       >
@@ -215,22 +215,22 @@ export default function MangaCard({ manga }: MangaCardProps) {
             </div>
           )}
 
-          <div className="absolute inset-0 flex items-end justify-start p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-2.5 py-1.5">
-              <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <div className="absolute inset-0 flex items-end justify-start p-2 sm:p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-2 sm:px-2.5 py-1 sm:py-1.5">
+              <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
               </svg>
-              <span className="text-white text-[8px] font-bold uppercase tracking-widest">Lihat Detail</span>
+              <span className="text-white text-[7px] sm:text-[8px] font-bold uppercase tracking-widest">Lihat Detail</span>
             </div>
           </div>
         </div>
 
-        <div className="px-3 pt-2.5 pb-3">
-          <h3 className="text-[11px] font-bold text-gray-300 group-hover:text-white truncate transition-colors">
+        <div className="px-2 sm:px-3 pt-2 sm:pt-2.5 pb-2 sm:pb-3">
+          <h3 className="text-[10px] sm:text-[11px] font-bold text-gray-300 group-hover:text-white truncate transition-colors">
             {attributes?.canonicalTitle}
           </h3>
           {attributes?.startDate && (
-            <p className="text-[9px] text-gray-500 mt-0.5 font-medium">{attributes.startDate.substring(0, 4)}</p>
+            <p className="text-[8px] sm:text-[9px] text-gray-500 mt-0.5 font-medium">{attributes.startDate.substring(0, 4)}</p>
           )}
         </div>
       </div>
@@ -239,80 +239,80 @@ export default function MangaCard({ manga }: MangaCardProps) {
       {isPreviewOpen && (
         <div
           className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center
-                     bg-black/80 backdrop-blur-sm p-0 sm:p-4 md:p-6"
+                     bg-black/80 backdrop-blur-sm p-0 sm:p-3 md:p-4"
           onClick={() => setIsPreviewOpen(false)}
         >
           <div
-            className="relative w-full sm:max-w-5xl xl:max-w-6xl
-                       h-[93dvh] sm:h-[88vh]
+            className="relative w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl
+                       h-[93dvh] sm:h-[90vh] md:h-[88vh]
                        bg-[#07090f] border border-white/[0.07]
-                       rounded-t-[28px] sm:rounded-3xl
+                       rounded-t-[24px] sm:rounded-2xl md:rounded-3xl
                        flex flex-col lg:flex-row overflow-hidden
-                       shadow-[0_-30px_100px_rgba(0,0,0,0.9)] sm:shadow-[0_30px_100px_rgba(0,0,0,0.9)]
+                       shadow-[0_-30px_100px_rgba(0,0,0,0.9)] sm:shadow-[0_20px_80px_rgba(0,0,0,0.9)] lg:shadow-[0_30px_100px_rgba(0,0,0,0.9)]
                        animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-300 ease-out"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sm:hidden absolute top-0 inset-x-0 flex justify-center pt-2.5 z-10 pointer-events-none">
+            <div className="sm:hidden absolute top-0 inset-x-0 flex justify-center pt-2 z-10 pointer-events-none">
               <div className="w-9 h-1 rounded-full bg-white/20" />
             </div>
 
             <button
               onClick={() => setIsPreviewOpen(false)}
-              className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-50
-                         w-8 h-8 flex items-center justify-center
+              className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 lg:top-4 lg:right-4 z-50
+                         w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center
                          bg-white/[0.06] hover:bg-white/[0.12] active:scale-90
-                         border border-white/[0.08] rounded-xl
+                         border border-white/[0.08] rounded-lg sm:rounded-xl
                          text-gray-400 hover:text-white transition-all"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
             {/* SIDEBAR */}
             <aside
-              className="shrink-0 w-full lg:w-[280px] xl:w-[320px]
+              className="shrink-0 w-full lg:w-[260px] xl:w-[300px]
                          flex flex-col overflow-y-auto no-scrollbar
-                         max-h-[40vh] sm:max-h-[44vh] lg:max-h-none lg:h-full
-                         px-4 pt-8 pb-4 sm:px-5 sm:pt-6 lg:px-7 lg:pt-8 lg:pb-8
+                         max-h-[40vh] sm:max-h-[42vh] md:max-h-[44vh] lg:max-h-none lg:h-full
+                         px-3 sm:px-4 pt-6 sm:pt-7 pb-3 sm:pb-4 lg:px-5 lg:pt-8 lg:pb-8
                          border-b lg:border-b-0 lg:border-r border-white/[0.07]
                          bg-gradient-to-b from-[#0b0e18] to-[#07090f]"
             >
-              <div className="flex gap-4 lg:block">
-                <div className="relative shrink-0 w-[95px] sm:w-[120px] lg:w-full aspect-[3/4]
-                                rounded-xl lg:rounded-2xl overflow-hidden
-                                border border-white/[0.08] bg-black shadow-2xl">
+              <div className="flex gap-3 sm:gap-4 lg:block">
+                <div className="relative shrink-0 w-[85px] sm:w-[100px] md:w-[110px] lg:w-full aspect-[3/4]
+                                rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden
+                                border border-white/[0.08] bg-black shadow-xl lg:shadow-2xl">
                   <img src={posterImage} className="w-full h-full object-cover" alt={attributes?.canonicalTitle} />
                 </div>
 
                 <div className="flex flex-col justify-between flex-1 lg:hidden py-0.5 min-w-0">
                   <div>
-                    <p className="text-indigo-400/80 text-[8px] font-black uppercase tracking-[0.4em] mb-1">Manga</p>
-                    <h2 className="text-white text-[14px] sm:text-[16px] font-black italic uppercase tracking-tight leading-[1.1] line-clamp-3">
+                    <p className="text-indigo-400/80 text-[7px] sm:text-[8px] font-black uppercase tracking-[0.4em] mb-1">Manga</p>
+                    <h2 className="text-white text-[13px] sm:text-[15px] md:text-[16px] font-black italic uppercase tracking-tight leading-[1.1] line-clamp-3">
                       {attributes?.canonicalTitle}
                     </h2>
                   </div>
-                  <button className="mt-3 w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white py-2 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all">
+                  <button className="mt-2 sm:mt-3 w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white py-1.5 sm:py-2 rounded-lg font-black text-[8px] sm:text-[9px] uppercase tracking-widest transition-all">
                     + Simpan
                   </button>
                 </div>
               </div>
 
-              <button className="hidden lg:flex items-center justify-center gap-2 mt-6 w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-950/40">
+              <button className="hidden lg:flex items-center justify-center gap-2 mt-5 w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-950/40">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
                 Simpan ke Pustaka
               </button>
 
-              <div className="hidden lg:block mt-8 pt-7 border-t border-white/[0.06] space-y-3.5">
-                <p className="text-[10px] text-white font-black uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500 inline-block" />
+              <div className="hidden lg:block mt-6 pt-5 border-t border-white/[0.06] space-y-3">
+                <p className="text-[9px] text-white font-black uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-sm bg-indigo-500 inline-block" />
                   Informasi Manga
                 </p>
                 {detailData.map((d, i) =>
                   d.value ? (
-                    <div key={i} className="flex items-start gap-3">
-                      <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest w-[60px] shrink-0 mt-0.5 leading-tight">{d.label}</span>
-                      <span className="text-[11px] text-gray-300 font-medium leading-snug break-words flex-1">{d.value}</span>
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-[7px] text-gray-500 font-black uppercase tracking-widest w-[55px] shrink-0 mt-0.5 leading-tight">{d.label}</span>
+                      <span className="text-[10px] text-gray-300 font-medium leading-snug break-words flex-1">{d.value}</span>
                     </div>
                   ) : null
                 )}
@@ -321,54 +321,54 @@ export default function MangaCard({ manga }: MangaCardProps) {
 
             {/* MAIN CONTENT */}
             <main className="flex-1 flex flex-col overflow-hidden bg-[#07090f] min-h-0">
-              <header className="shrink-0 px-4 sm:px-7 pt-3 sm:pt-6 pb-0 border-b border-white/[0.07] bg-[#07090f]/95 backdrop-blur-md z-20">
-                <div className="hidden lg:block mb-5 pr-10">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="h-px w-6 bg-indigo-500" />
-                    <span className="text-indigo-400/80 text-[9px] font-black uppercase tracking-[0.5em]">Katalog Manga</span>
+              <header className="shrink-0 px-3 sm:px-5 lg:px-6 pt-2 sm:pt-4 lg:pt-5 pb-0 border-b border-white/[0.07] bg-[#07090f]/95 backdrop-blur-md z-20">
+                <div className="hidden lg:block mb-3 pr-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-px w-5 bg-indigo-500" />
+                    <span className="text-indigo-400/80 text-[8px] font-black uppercase tracking-[0.5em]">Katalog Manga</span>
                   </div>
-                  <h2 className="text-3xl xl:text-4xl font-black italic text-white uppercase tracking-tight leading-[1.1] line-clamp-2">
+                  <h2 className="text-2xl xl:text-3xl font-black italic text-white uppercase tracking-tight leading-[1.1] line-clamp-2">
                     {attributes?.canonicalTitle}
                   </h2>
                 </div>
 
-                <nav className="flex overflow-x-auto no-scrollbar gap-2 sm:gap-4">
+                <nav className="flex overflow-x-auto no-scrollbar gap-1 sm:gap-2 md:gap-3">
                   {TABS.map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`px-3 sm:px-4 pb-3 pt-1 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] relative transition-all shrink-0 ${
+                      className={`px-2 sm:px-3 pb-2 sm:pb-3 pt-1 text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.25em] relative transition-all shrink-0 ${
                         activeTab === tab ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'
                       }`}
                     >
                       {tab}
                       {activeTab === tab && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-indigo-500 rounded-t-full shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px] sm:h-[3px] bg-indigo-500 rounded-t-full shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
                       )}
                     </button>
                   ))}
                 </nav>
               </header>
 
-              <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-7 pt-5 pb-8">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-5 lg:p-6 pt-4 sm:pt-5 pb-6 sm:pb-8">
                 {loadingDetail && activeTab === 'Sinopsis' ? (
-                  <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-40">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Menyiapkan Data...</span>
+                  <div className="flex flex-col items-center justify-center py-16 sm:py-20 gap-3 opacity-40">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[9px] sm:text-[10px] font-black text-indigo-400 uppercase tracking-widest">Menyiapkan Data...</span>
                   </div>
                 ) : (
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 text-left">
                     
                     {/* SINOPSIS */}
                     {activeTab === 'Sinopsis' && (
-                      <div className="max-w-3xl space-y-5">
+                      <div className="max-w-3xl space-y-4">
                         {isTranslating ? (
-                          <div className="flex items-center gap-3 py-6 opacity-60">
-                            <svg className="animate-spin h-5 w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                          <div className="flex items-center gap-2 sm:gap-3 py-4 sm:py-5 opacity-60">
+                            <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             <span className="text-xs text-indigo-300 font-medium">Sedang menerjemahkan sinopsis...</span>
                           </div>
                         ) : (
-                          <p className="text-gray-300 text-[13px] sm:text-[15px] leading-relaxed font-medium">
+                          <p className="text-gray-300 text-xs sm:text-sm md:text-[15px] leading-relaxed font-medium">
                             {translatedSynopsis || 'Maaf, sinopsis untuk manga ini belum tersedia di database kami.'}
                           </p>
                         )}
@@ -377,21 +377,21 @@ export default function MangaCard({ manga }: MangaCardProps) {
 
                     {/* DAFTAR BAB (Dengan Pagination Bertahap) */}
                     {activeTab === 'Bab' && (
-                      <div className="space-y-6">
+                      <div className="space-y-5">
                         {chapters.length > 0 ? (
                           <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                               {chapters.map((ch: any, i: number) => (
-                                <div key={`${ch.id}-${i}`} className="flex gap-4 p-3.5 bg-white/[0.03] hover:bg-white/[0.06] transition-colors rounded-xl border border-white/[0.05]">
-                                  <div className="w-12 h-16 bg-gray-900 rounded-lg shrink-0 overflow-hidden border border-white/10 flex items-center justify-center">
+                                <div key={`${ch.id}-${i}`} className="flex gap-2 sm:gap-3 p-2 sm:p-3 bg-white/[0.03] hover:bg-white/[0.06] transition-colors rounded-lg sm:rounded-xl border border-white/[0.05]">
+                                  <div className="w-10 h-14 sm:w-12 sm:h-16 bg-gray-900 rounded-md sm:rounded-lg shrink-0 overflow-hidden border border-white/10 flex items-center justify-center">
                                     {ch.attributes?.thumbnail?.original || posterImage ? (
                                       <img src={ch.attributes?.thumbnail?.original || posterImage} className="w-full h-full object-cover" alt="" />
                                     ) : (
-                                      <span className="text-gray-600 text-[10px] font-bold">No Img</span>
+                                      <span className="text-gray-600 text-[8px] font-bold">No Img</span>
                                     )}
                                   </div>
                                   <div className="flex flex-col justify-center min-w-0">
-                                     <span className="text-indigo-400 text-[8px] font-black uppercase tracking-widest mb-1">
+                                     <span className="text-indigo-400 text-[7px] sm:text-[8px] font-black uppercase tracking-widest mb-0.5 sm:mb-1">
                                        Bab {ch.attributes?.number || '?'}
                                      </span>
                                      <h4 className="text-white text-xs sm:text-sm font-bold truncate">
@@ -404,11 +404,11 @@ export default function MangaCard({ manga }: MangaCardProps) {
                             
                             {/* Tombol Load More untuk Bab */}
                             {hasMoreChapters && (
-                              <div className="flex justify-center pt-4">
+                              <div className="flex justify-center pt-3 sm:pt-4">
                                 <button
                                   onClick={() => fetchChapters(chapterOffset + 20)}
                                   disabled={isLoadingChapters}
-                                  className="px-6 py-2.5 bg-white/5 hover:bg-indigo-600 border border-white/10 hover:border-indigo-500 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-white transition-all disabled:opacity-50"
+                                  className="px-4 sm:px-5 py-1.5 sm:py-2 bg-white/5 hover:bg-indigo-600 border border-white/10 hover:border-indigo-500 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-white transition-all disabled:opacity-50"
                                 >
                                   {isLoadingChapters ? 'Memuat...' : 'Muat Bab Selanjutnya'}
                                 </button>
@@ -417,17 +417,17 @@ export default function MangaCard({ manga }: MangaCardProps) {
                           </>
                         ) : (
                           !isLoadingChapters && (
-                            <div className="text-center py-16">
-                               <p className="text-gray-500 text-sm font-medium">Belum ada daftar bab yang ditambahkan untuk manga ini.</p>
+                            <div className="text-center py-12 sm:py-14">
+                               <p className="text-gray-500 text-xs sm:text-sm font-medium">Belum ada daftar bab yang ditambahkan untuk manga ini.</p>
                             </div>
                           )
                         )}
                         
                         {/* Skeleton loader awal untuk tab bab */}
                         {isLoadingChapters && chapters.length === 0 && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-pulse">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 animate-pulse">
                             {[...Array(6)].map((_, i) => (
-                              <div key={i} className="h-[92px] bg-white/[0.03] rounded-xl border border-white/[0.05]" />
+                              <div key={i} className="h-[70px] sm:h-[80px] bg-white/[0.03] rounded-lg sm:rounded-xl border border-white/[0.05]" />
                             ))}
                           </div>
                         )}
@@ -437,21 +437,21 @@ export default function MangaCard({ manga }: MangaCardProps) {
                     {/* KARAKTER */}
                     {activeTab === 'Karakter' && (
                       characters.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                           {characters.map((char: any, i: number) => (
-                            <div key={i} className="bg-white/[0.03] border border-white/[0.05] p-2 rounded-2xl flex flex-col group">
-                              <div className="overflow-hidden rounded-xl aspect-[3/4] bg-gray-900 mb-2">
+                            <div key={i} className="bg-white/[0.03] border border-white/[0.05] p-1.5 sm:p-2 rounded-xl sm:rounded-2xl flex flex-col group">
+                              <div className="overflow-hidden rounded-lg sm:rounded-xl aspect-[3/4] bg-gray-900 mb-1 sm:mb-2">
                                 <img src={char.image || 'https://placehold.co/300x400/1a1a2e/ffffff?text=?'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={char.name} />
                               </div>
-                              <div className="bg-white/[0.05] rounded-lg py-2 mt-auto">
-                                <p className="text-[10px] font-bold text-gray-300 group-hover:text-white text-center truncate px-2">{char.name}</p>
+                              <div className="bg-white/[0.05] rounded-md sm:rounded-lg py-1 sm:py-2 mt-auto">
+                                <p className="text-[8px] sm:text-[10px] font-bold text-gray-300 group-hover:text-white text-center truncate px-1 sm:px-2">{char.name}</p>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-16">
-                           <p className="text-gray-500 text-sm font-medium">Informasi karakter belum tersedia.</p>
+                        <div className="text-center py-12 sm:py-14">
+                           <p className="text-gray-500 text-xs sm:text-sm font-medium">Informasi karakter belum tersedia.</p>
                         </div>
                       )
                     )}
@@ -459,14 +459,14 @@ export default function MangaCard({ manga }: MangaCardProps) {
                     {/* ULASAN PEMBACA */}
                     {activeTab === 'Ulasan' && (
                       reviews.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                           {reviews.map((rev: any, i: number) => (
-                            <div key={i} className="bg-white/[0.02] p-5 sm:p-6 rounded-2xl flex flex-col sm:flex-row gap-4 sm:gap-5 border border-white/[0.05]">
-                              <img src={rev.user?.attributes?.avatar?.medium || rev.user?.attributes?.avatar?.tiny || 'https://placehold.co/100x100/1a1a2e/ffffff?text=U'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-indigo-500/30" alt="Avatar" />
+                            <div key={i} className="bg-white/[0.02] p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row gap-3 sm:gap-4 border border-white/[0.05]">
+                              <img src={rev.user?.attributes?.avatar?.medium || rev.user?.attributes?.avatar?.tiny || 'https://placehold.co/100x100/1a1a2e/ffffff?text=U'} className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-indigo-500/30" alt="Avatar" />
                               <div className="flex-1">
-                                 <p className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                                 <p className="text-white text-xs sm:text-sm font-bold mb-1 sm:mb-2 flex items-center gap-1 sm:gap-2 flex-wrap">
                                    {rev.user?.attributes?.name || 'Pengguna Anonim'}
-                                   <span className="text-yellow-500 text-xs bg-yellow-500/10 px-2 py-0.5 rounded-full">★ {rev.attributes?.likesCount} Likes</span>
+                                   <span className="text-yellow-500 text-[9px] sm:text-xs bg-yellow-500/10 px-1.5 sm:px-2 py-0.5 rounded-full">★ {rev.attributes?.likesCount} Likes</span>
                                  </p>
                                  <p className="text-gray-400 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{rev.attributes?.content}</p>
                               </div>
@@ -474,8 +474,8 @@ export default function MangaCard({ manga }: MangaCardProps) {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-16">
-                           <p className="text-gray-500 text-sm font-medium">Belum ada ulasan pembaca untuk manga ini. Jadilah yang pertama!</p>
+                        <div className="text-center py-12 sm:py-14">
+                           <p className="text-gray-500 text-xs sm:text-sm font-medium">Belum ada ulasan pembaca untuk manga ini. Jadilah yang pertama!</p>
                         </div>
                       )
                     )}
@@ -483,20 +483,20 @@ export default function MangaCard({ manga }: MangaCardProps) {
                     {/* TERKAIT / FRANCHISE */}
                     {activeTab === 'Terkait' && (
                       franchise.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                           {franchise.map((f: any, i: number) => (
-                            <div key={i} className="bg-white/[0.03] hover:bg-white/[0.06] transition-colors p-3.5 rounded-2xl flex gap-3 sm:gap-4 items-center border border-white/[0.05]">
-                              <img src={f.dest?.attributes?.posterImage?.small || f.dest?.attributes?.posterImage?.tiny || posterImage} className="w-12 h-16 rounded-lg object-cover bg-gray-900 border border-white/10" alt="" />
+                            <div key={i} className="bg-white/[0.03] hover:bg-white/[0.06] transition-colors p-2 sm:p-3 rounded-xl sm:rounded-2xl flex gap-2 sm:gap-3 items-center border border-white/[0.05]">
+                              <img src={f.dest?.attributes?.posterImage?.small || f.dest?.attributes?.posterImage?.tiny || posterImage} className="w-10 h-14 sm:w-12 sm:h-16 rounded-md sm:rounded-lg object-cover bg-gray-900 border border-white/10" alt="" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[9px] text-indigo-400 font-black uppercase tracking-widest mb-1.5">{f.role}</p>
+                                <p className="text-[7px] sm:text-[9px] text-indigo-400 font-black uppercase tracking-widest mb-1">{f.role}</p>
                                 <p className="text-xs sm:text-sm text-white font-bold truncate">{f.dest?.attributes?.canonicalTitle || 'Unknown Title'}</p>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-16">
-                           <p className="text-gray-500 text-sm font-medium">Tidak ada media/franchise terkait yang ditemukan.</p>
+                        <div className="text-center py-12 sm:py-14">
+                           <p className="text-gray-500 text-xs sm:text-sm font-medium">Tidak ada media/franchise terkait yang ditemukan.</p>
                         </div>
                       )
                     )}
