@@ -17,6 +17,11 @@ export default function MangaCard({ manga }: MangaCardProps) {
   const [franchise,  setFranchise]  = useState<any[]>([]);
   const [fullDetail, setFullDetail] = useState<any>(null);
 
+  // Loading state per tab
+  const [loadingCharacters, setLoadingCharacters] = useState(false);
+  const [loadingReviews,    setLoadingReviews]    = useState(false);
+  const [loadingFranchise,  setLoadingFranchise]  = useState(false);
+
   const [translatedSynopsis, setTranslatedSynopsis] = useState<string>('');
   const [isTranslating, setIsTranslating] = useState(false);
   
@@ -121,6 +126,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
           fetchChapters(0);
 
         } else if (activeTab === 'Karakter' && characters.length === 0) {
+          setLoadingCharacters(true);
           const res  = await fetch(
             `https://kitsu.io/api/edge/castings?filter[media_id]=${manga.id}&filter[media_type]=Manga&filter[is_character]=true&include=character&page[limit]=16`,
             { headers: KITSU_HEADERS }
@@ -137,8 +143,10 @@ export default function MangaCard({ manga }: MangaCardProps) {
               };
             }).filter((c: any) => c.name) || []
           );
+          setLoadingCharacters(false);
 
         } else if (activeTab === 'Ulasan' && reviews.length === 0) {
+          setLoadingReviews(true);
           const res  = await fetch(
             `https://kitsu.io/api/edge/manga/${manga.id}/reviews?include=user&page[limit]=10&sort=-likesCount`,
             { headers: KITSU_HEADERS }
@@ -152,8 +160,10 @@ export default function MangaCard({ manga }: MangaCardProps) {
               ),
             })) || []
           );
+          setLoadingReviews(false);
 
         } else if (activeTab === 'Terkait' && franchise.length === 0) {
+          setLoadingFranchise(true);
           const res  = await fetch(
             `https://kitsu.io/api/edge/manga/${manga.id}/media-relationships?include=destination`,
             { headers: KITSU_HEADERS }
@@ -167,9 +177,13 @@ export default function MangaCard({ manga }: MangaCardProps) {
               ),
             })) || []
           );
+          setLoadingFranchise(false);
         }
       } catch (e) { 
-        console.error("Gagal memuat data tab:", e); 
+        console.error("Gagal memuat data tab:", e);
+        setLoadingCharacters(false);
+        setLoadingReviews(false);
+        setLoadingFranchise(false);
       }
     };
     fetchTabData();
@@ -513,12 +527,26 @@ export default function MangaCard({ manga }: MangaCardProps) {
                           )
                         )}
 
-                        {/* Skeleton loader */}
+                        {/* Skeleton loader bab */}
                         {isLoadingChapters && chapters.length === 0 && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 animate-pulse">
-                            {[...Array(6)].map((_, i) => (
-                              <div key={i} className="h-[76px] bg-white/[0.03] rounded-xl border border-white/[0.05]" />
-                            ))}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 opacity-50">
+                              <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                                Sedang memuat daftar bab, sabar ya...
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 animate-pulse">
+                              {[...Array(6)].map((_, i) => (
+                                <div key={i} className="flex gap-3 p-2.5 bg-white/[0.03] rounded-xl border border-white/[0.05]">
+                                  <div className="w-11 h-16 bg-white/[0.05] rounded-lg shrink-0" />
+                                  <div className="flex-1 space-y-2 py-2">
+                                    <div className="h-2 bg-white/[0.05] rounded-full w-1/4" />
+                                    <div className="h-3 bg-white/[0.04] rounded-full w-3/4" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -526,7 +554,24 @@ export default function MangaCard({ manga }: MangaCardProps) {
 
                     {/* ── KARAKTER ── */}
                     {activeTab === 'Karakter' && (
-                      characters.length > 0 ? (
+                      loadingCharacters ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 opacity-50">
+                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                              Lagi nyari karakter-karakternya...
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 animate-pulse">
+                            {[...Array(8)].map((_, i) => (
+                              <div key={i} className="flex flex-col gap-2">
+                                <div className="aspect-[3/4] bg-white/[0.05] rounded-xl" />
+                                <div className="h-2.5 bg-white/[0.05] rounded-full w-3/4 mx-auto" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : characters.length > 0 ? (
                         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                           {characters.map((char: any, i: number) => (
                             <div key={i} className="bg-white/[0.03] border border-white/[0.05] p-1.5 sm:p-2 rounded-2xl flex flex-col group">
@@ -556,7 +601,26 @@ export default function MangaCard({ manga }: MangaCardProps) {
 
                     {/* ── ULASAN ── */}
                     {activeTab === 'Ulasan' && (
-                      reviews.length > 0 ? (
+                      loadingReviews ? (
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex items-center gap-2 opacity-50">
+                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                              Mengumpulkan pendapat para pembaca...
+                            </span>
+                          </div>
+                          {[...Array(3)].map((_, i) => (
+                            <div key={i} className="bg-white/[0.02] p-3.5 sm:p-4 rounded-2xl border border-white/[0.05] flex gap-3 animate-pulse">
+                              <div className="w-9 h-9 rounded-full bg-white/[0.06] shrink-0" />
+                              <div className="flex-1 space-y-2 py-1">
+                                <div className="h-2.5 bg-white/[0.06] rounded-full w-1/3" />
+                                <div className="h-2 bg-white/[0.04] rounded-full w-full" />
+                                <div className="h-2 bg-white/[0.04] rounded-full w-4/5" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : reviews.length > 0 ? (
                         <div className="space-y-3 sm:space-y-4">
                           {reviews.map((rev: any, i: number) => (
                             <div
@@ -593,7 +657,27 @@ export default function MangaCard({ manga }: MangaCardProps) {
 
                     {/* ── TERKAIT ── */}
                     {activeTab === 'Terkait' && (
-                      franchise.length > 0 ? (
+                      loadingFranchise ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 opacity-50">
+                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                              Mencari manga dan anime yang berhubungan...
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 animate-pulse">
+                            {[...Array(4)].map((_, i) => (
+                              <div key={i} className="flex gap-3 items-center p-2.5 bg-white/[0.02] rounded-2xl border border-white/[0.04]">
+                                <div className="w-11 h-16 rounded-lg bg-white/[0.06] shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-2 bg-white/[0.06] rounded-full w-1/3" />
+                                  <div className="h-3 bg-white/[0.05] rounded-full w-4/5" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : franchise.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                           {franchise.map((f: any, i: number) => (
                             <div

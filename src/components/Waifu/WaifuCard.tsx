@@ -14,9 +14,6 @@ export default function WaifuCard({ image, isNsfwLocked, onCardClick }: WaifuCar
 
   const imageUrl = image.preview || image.url;
   const proxyUrl = `/api/proxy?url=${encodeURIComponent(imageUrl)}`;
-
-  // isMature = konten dewasa yang masih bisa dilihat (jika NSFW on)
-  // isNsfwLocked = isMature tapi NSFW off → tampilkan dengan lock
   const isLocked = isNsfwLocked || false;
 
   return (
@@ -40,7 +37,7 @@ export default function WaifuCard({ image, isNsfwLocked, onCardClick }: WaifuCar
         el.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.06)';
       }}
     >
-      {/* Skeleton */}
+      {/* Skeleton loading */}
       {!isLoaded && (
         <div
           className="absolute inset-0 animate-pulse"
@@ -48,23 +45,24 @@ export default function WaifuCard({ image, isNsfwLocked, onCardClick }: WaifuCar
         />
       )}
 
-      {/* Gambar — blur jika terkunci */}
+      {/* Gambar — object-cover supaya selalu full */}
       <Image
         src={proxyUrl}
-        alt={image.title}
+        alt={image.title || 'Karya seni'}
         fill
-        className="object-cover duration-700 group-hover:scale-[1.06]"
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+        className="object-cover transition-all duration-700 group-hover:scale-[1.06]"
         style={{
           opacity: isLoaded ? 1 : 0,
           transition: 'opacity 0.5s ease, transform 0.7s ease',
           filter: isLocked ? 'blur(18px) brightness(0.6)' : 'none',
           transform: isLocked ? 'scale(1.12)' : undefined,
         }}
-        onLoadingComplete={() => setIsLoaded(true)}
+        onLoad={() => setIsLoaded(true)}
         unoptimized
       />
 
-      {/* Overlay lock untuk konten mature (NSFW off) */}
+      {/* Lock overlay untuk konten 18+ saat NSFW off */}
       {isLocked && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
           <div
@@ -86,12 +84,12 @@ export default function WaifuCard({ image, isNsfwLocked, onCardClick }: WaifuCar
         </div>
       )}
 
-      {/* Hover Overlay — nama & author saja, tanpa tombol unduh */}
+      {/* Hover overlay — judul & author */}
       {!isLocked && (
         <div
           className="absolute inset-0 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
-            background: 'linear-gradient(to top, rgba(5,5,15,0.97) 0%, rgba(5,5,15,0.45) 55%, transparent 100%)',
+            background: 'linear-gradient(to top, rgba(5,5,15,0.97) 0%, rgba(5,5,15,0.4) 50%, transparent 100%)',
           }}
         >
           <div className="p-3 sm:p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
