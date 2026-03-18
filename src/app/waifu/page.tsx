@@ -25,17 +25,19 @@ export default function WaifuPage() {
   
   const [offset, setOffset] = useState<number | null>(0);
   const [hasMore, setHasMore] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const requestIdRef = useRef(0);
 
-  // ✅ SOLUSI: Terima customOffset sebagai parameter untuk reset
   const fetchImages = useCallback(async (isMore = false, customOffset?: number) => {
     const requestId = ++requestIdRef.current;
 
     if (isMore) setLoadingMore(true);
-    else setLoading(true);
+    else {
+      setLoading(true);
+      setErrorMessage(null); // Reset error saat mulai pencarian baru
+    }
 
-    // Jika isMore pakai state offset, jika reset pakai customOffset (biasanya 0)
     const currentOffset = isMore ? (offset ?? 0) : (customOffset ?? 0);
     const term = searchQuery.trim() || category;
 
@@ -43,6 +45,13 @@ export default function WaifuPage() {
       const result = await getWaifuGallery(term, currentOffset, isNsfw);
 
       if (requestId !== requestIdRef.current) return;
+
+      // Cek jika ada error dari service
+      if ('error' in result && result.error === 429) {
+        setErrorMessage("Terlalu banyak permintaan atau sesi berakhir. Silakan refresh halaman atau login kembali.");
+        setHasMore(false);
+        return;
+      }
 
       if (isMore) {
         setData(prev => {
@@ -60,6 +69,7 @@ export default function WaifuPage() {
       setHasMore(result.hasMore);
     } catch (err) {
       console.error("Fetch error on Page:", err);
+      setErrorMessage("Terjadi kesalahan koneksi.");
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false);
@@ -68,15 +78,13 @@ export default function WaifuPage() {
     }
   }, [category, searchQuery, offset, isNsfw]);
 
-  // ✅ SOLUSI: Kirim 0 langsung ke fetchImages saat filter berubah
   useEffect(() => {
     const timer = setTimeout(() => {
-      setOffset(0);
       fetchImages(false, 0); 
-    }, 400);
+    }, 500); // Debounce ditingkatkan sedikit agar lebih aman dari rate limit
 
     return () => clearTimeout(timer);
-  }, [category, searchQuery, isNsfw]); // fetchImages sengaja tidak masuk agar tidak loop
+  }, [category, searchQuery, isNsfw]);
 
   return (
     <div className="min-h-screen bg-[#060910] text-white flex flex-col overflow-x-hidden">
@@ -139,6 +147,18 @@ export default function WaifuPage() {
           </div>
         </div>
 
+        {errorMessage && (
+          <div className="mb-8 p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-500 text-center text-sm">
+            {errorMessage}
+            <button 
+              onClick={() => window.location.href = '/api/auth/login'} 
+              className="ml-4 underline font-bold"
+            >
+              Login Ulang
+            </button>
+          </div>
+        )}
+
         {loading && data.length === 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-5 animate-pulse">
             {[...Array(10)].map((_, i) => (
@@ -153,7 +173,7 @@ export default function WaifuPage() {
               ))}
             </div>
 
-            {hasMore && (
+            {hasMore && !errorMessage && (
               <div className="mt-16 text-center">
                 <button
                   onClick={() => fetchImages(true)}
