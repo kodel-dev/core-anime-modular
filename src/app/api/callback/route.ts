@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  
+  // Deteksi host secara dinamis
+  const host = request.headers.get('host');
+  const protocol = host?.includes('localhost') ? 'http' : 'https';
+  const baseUrl = `${protocol}://${host}`;
 
   if (!code) {
     return NextResponse.redirect(new URL('/login?error=no_code', request.url));
@@ -29,10 +33,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=token_failed', request.url));
     }
 
-    // WAJIB: Simpan token di Cookie agar browser tahu user sudah login
+    // Simpan token di Cookie
     const res = NextResponse.redirect(new URL('/waifu', request.url));
     res.cookies.set('da_access_token', data.access_token, {
-      httpOnly: false, // Set false agar bisa dibaca di client-side Navbar
+      httpOnly: false, 
       secure: process.env.NODE_ENV === 'production',
       maxAge: data.expires_in,
       path: '/',
@@ -40,6 +44,7 @@ export async function GET(request: NextRequest) {
 
     return res;
   } catch (error) {
+    console.error('Callback Server Error:', error);
     return NextResponse.redirect(new URL('/login?error=server_error', request.url));
   }
 }
