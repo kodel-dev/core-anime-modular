@@ -185,11 +185,7 @@ export default function WaifuPage() {
   }, [category, isNsfw, sortMode]);
 
   // ── FIX: hapus "if kosong return" agar galeri reset saat search dikosongkan ──
-  useEffect(() => {
-    setOffset(0);
-    const t = setTimeout(() => fetchImages(false, 0), 500);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
+// Search hanya jalan saat tekan Enter atau klik tombol cari
 
   const handleNsfwToggle = () => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
