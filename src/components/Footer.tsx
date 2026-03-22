@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 const NAV_LINKS = [
@@ -45,6 +45,26 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [presenceCount, setPresenceCount] = useState<number | null>(null);
+
+  // Auto-fetch data presence dari widget JSON
+  useEffect(() => {
+    const fetchPresence = async () => {
+      try {
+        const res = await fetch('https://ptb.discord.com/api/guilds/1483923936717570238/widget.json');
+        const data = await res.json();
+        if (data.presence_count !== undefined) {
+          setPresenceCount(data.presence_count);
+        }
+      } catch (e) {
+        console.error("Failed to sync with Discord Infrastructure");
+      }
+    };
+
+    fetchPresence();
+    const interval = setInterval(fetchPresence, 60000); // Sync tiap 1 menit
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <footer className="relative bg-[#060910] overflow-hidden">
@@ -77,7 +97,7 @@ export default function Footer() {
                   Core<span className="text-indigo-500">Anime</span>
                 </h2>
                 <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mt-0.5">
-                  by kodel-dev
+                  by Core Dev Group
                 </p>
               </div>
             </div>
@@ -111,8 +131,8 @@ export default function Footer() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span className="text-[10px] font-bold text-gray-500 tracking-wide">
-                Semua layanan berjalan normal
+              <span className="text-[10px] font-bold text-gray-500 tracking-wide lowercase first-letter:uppercase">
+                {presenceCount !== null ? `${presenceCount} warga sedang online` : 'Layanan berjalan normal'}
               </span>
             </div>
           </div>
@@ -141,7 +161,7 @@ export default function Footer() {
           {/* Info — col span 3 */}
           <div className="lg:col-span-3">
             <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-600 mb-5 sm:mb-6">
-              Info
+              Infrastructure
             </p>
             <ul className="space-y-4">
               <li>
@@ -156,11 +176,14 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Komunitas</p>
+                <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Community Hub</p>
                 <a href="https://discord.gg/6ZnNcTJxer" target="_blank" rel="noreferrer"
-                  className="text-xs text-indigo-400 font-semibold hover:text-indigo-300 transition-colors flex items-center gap-1.5">
-                  Gabung Discord
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  className="group relative flex items-center justify-between bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 p-3 rounded-lg transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <span className="text-xs font-bold text-indigo-300">Core Dev Group</span>
+                  </div>
+                  <svg className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
