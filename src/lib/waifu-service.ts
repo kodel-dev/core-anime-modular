@@ -43,8 +43,9 @@ async function fetchGallery(
 
     return {
       items,
-      nextOffset: data.nextOffset ?? null,
-      hasMore:    data.hasMore    ?? false,
+      // ✅ FIX: route.ts kirim next_offset & has_more (underscore), bukan camelCase
+      nextOffset: data.next_offset ?? data.nextOffset ?? null,
+      hasMore:    data.has_more    ?? data.hasMore    ?? false,
     };
   } catch {
     return null;
@@ -60,9 +61,6 @@ export const getWaifuGallery = async (
 ): Promise<GalleryResult> => {
   const raw = category.trim().toLowerCase();
 
-  // ── Kategori "bawaan" — langsung ke endpoint yang tepat, tanpa fallback ──────
-  // trending → browse/home (sudah ditangani di route.ts dengan tag=trending)
-  // kategori lain (anime, waifu, naruto, dll) → browse/tags atau browse/newest
   const BUILTIN_CATEGORIES = [
     'trending', 'anime', 'waifu', 'neko', 'mecha',
     'naruto', 'overwatch', 'digimon', 'demon', 'angel',
@@ -73,27 +71,20 @@ export const getWaifuGallery = async (
   ];
 
   if (BUILTIN_CATEGORIES.includes(raw)) {
-    // Satu request langsung, tidak perlu fallback
     const result = await fetchGallery(raw, offset, isNsfw, sort);
-
-    // Error fatal
     if (result?.error) return result;
-
-    // Berhasil
     if (result && result.items.length > 0) return result;
 
-    // Kosong dari kategori bawaan → coba 'anime' sebagai safety net
     const safeNet = await fetchGallery('anime', offset, isNsfw, sort);
     if (safeNet && safeNet.items.length > 0) {
       return { ...safeNet, searchedAs: 'anime (hasil terkait)' };
     }
-
     return { items: [], nextOffset: null, hasMore: false };
   }
 
   // ── Mode pencarian bebas — fallback berlapis ───────────────────────────────
 
-  // Strategi 1: keyword persis
+  // Strategi 1: keyword persis (spasi boleh: "zero two", "genshin impact")
   const s1 = await fetchGallery(raw, offset, isNsfw, sort);
   if (s1?.error) return s1;
   if (s1 && s1.items.length > 0) return { ...s1, searchedAs: raw };

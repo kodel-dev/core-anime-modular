@@ -46,10 +46,10 @@ export default function WaifuPage() {
   const [translatedDesc,  setTranslatedDesc]  = useState('');
   const [isTranslatingDesc, setIsTranslatingDesc] = useState(false);
   const [isDescExpanded,  setIsDescExpanded]  = useState(false);
-  const [imgRatio,        setImgRatio]        = useState<'portrait' | 'landscape' | 'square'>('portrait'); // rasio gambar modal
-  const [searchedAs,      setSearchedAs]      = useState<string>(''); // label strategi pencarian yang berhasil
-  const [isFullscreen,    setIsFullscreen]    = useState(false);       // fullscreen gambar di dalam modal
-  const [sortMode,        setSortMode]        = useState<'newest' | 'popular'>('newest'); // urutan galeri
+  const [imgRatio,        setImgRatio]        = useState<'portrait' | 'landscape' | 'square'>('portrait');
+  const [searchedAs,      setSearchedAs]      = useState<string>('');
+  const [isFullscreen,    setIsFullscreen]    = useState(false);
+  const [sortMode,        setSortMode]        = useState<'newest' | 'popular'>('newest');
 
   const dropdownRef   = useRef<HTMLDivElement>(null);
   const requestIdRef  = useRef(0);
@@ -76,10 +76,9 @@ export default function WaifuPage() {
   const handleCardClick = async (img: any) => {
     setSelectedImage(img);
     setTranslatedDesc('');
-    setImgRatio('portrait'); // reset dulu, deteksi ulang
+    setImgRatio('portrait');
     setIsFetchingMeta(true);
 
-    // Deteksi rasio gambar sebelum modal muncul
     if (img.url || img.preview) {
       const probeUrl = `/api/proxy?url=${encodeURIComponent(img.preview || img.url)}`;
       const tempImg = new window.Image();
@@ -102,7 +101,6 @@ export default function WaifuPage() {
     finally { setIsFetchingMeta(false); }
   };
 
-  // Tutup dropdown saat klik luar
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -155,7 +153,6 @@ export default function WaifuPage() {
         });
       } else {
         setData(newItems);
-        // Tampilkan ke user kalau hasil datang dari strategi fallback
         if (result?.searchedAs && result.searchedAs !== (searchQuery.trim() || category)) {
           setSearchedAs(result.searchedAs);
         } else {
@@ -181,16 +178,14 @@ export default function WaifuPage() {
     fetchImages(false, 0);
   };
 
-  // Fetch saat category / isNsfw / sortMode berubah
   useEffect(() => {
     setOffset(0);
     const t = setTimeout(() => fetchImages(false, 0), 100);
     return () => clearTimeout(t);
   }, [category, isNsfw, sortMode]);
 
-  // Debounce search — fetch otomatis saat mengetik, tanpa perlu tekan enter
+  // ── FIX: hapus "if kosong return" agar galeri reset saat search dikosongkan ──
   useEffect(() => {
-    if (searchQuery.trim() === '') return; // kosong = biarkan category yang handle
     setOffset(0);
     const t = setTimeout(() => fetchImages(false, 0), 500);
     return () => clearTimeout(t);
@@ -253,7 +248,6 @@ export default function WaifuPage() {
           />
 
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            {/* Judul */}
             <div className="space-y-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[9px] text-pink-400/70 font-black uppercase tracking-[0.3em]">CoreAnime</span>
@@ -272,9 +266,7 @@ export default function WaifuPage() {
               </p>
             </div>
 
-            {/* Controls */}
             <div className="flex flex-col xs:flex-row flex-wrap gap-2.5 w-full sm:w-auto sm:items-center">
-              {/* Search */}
               <form onSubmit={handleSearchSubmit} className="relative flex items-center flex-1 sm:flex-none">
                 <input
                   type="text"
@@ -282,10 +274,7 @@ export default function WaifuPage() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full sm:w-52 md:w-60 pl-4 pr-11 py-3 text-sm rounded-xl outline-none transition-all placeholder:text-gray-600"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
                   onFocus={e => (e.target.style.border = '1px solid rgba(236,72,153,0.5)')}
                   onBlur={e => (e.target.style.border = '1px solid rgba(255,255,255,0.08)')}
                 />
@@ -299,12 +288,10 @@ export default function WaifuPage() {
               </form>
 
               <div className="flex gap-2.5 items-center">
-                {/* Dropdown Kategori */}
                 <div className="relative flex-1 sm:flex-none" ref={dropdownRef}>
                   <button type="button" onClick={() => setIsDropdownOpen(v => !v)}
                     className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between gap-2 transition-all active:scale-95"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <span className="truncate">{GENRES.find(g => g.id === category)?.label}</span>
                     <svg className="w-4 h-4 flex-shrink-0 transition-transform duration-300"
                       style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -338,29 +325,21 @@ export default function WaifuPage() {
                   )}
                 </div>
 
-                {/* Sort Toggle: Terbaru / Populer */}
                 <div className="flex rounded-xl overflow-hidden"
                   style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
                   {(['newest', 'popular'] as const).map(mode => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setSortMode(mode)}
+                    <button key={mode} type="button" onClick={() => setSortMode(mode)}
                       className="px-3 py-3 text-[9px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 whitespace-nowrap"
                       style={{
-                        background: sortMode === mode
-                          ? 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(190,24,93,0.15))'
-                          : 'transparent',
+                        background: sortMode === mode ? 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(190,24,93,0.15))' : 'transparent',
                         color: sortMode === mode ? '#f472b6' : 'rgba(255,255,255,0.3)',
                         borderRight: mode === 'newest' ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                      }}
-                    >
+                      }}>
                       {mode === 'newest' ? '🆕 Terbaru' : '🔥 Populer'}
                     </button>
                   ))}
                 </div>
 
-                {/* NSFW Toggle */}
                 <button type="button" onClick={handleNsfwToggle}
                   className="px-3 sm:px-4 py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 whitespace-nowrap"
                   style={{
@@ -368,8 +347,7 @@ export default function WaifuPage() {
                     border: isNsfw ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(255,255,255,0.08)',
                     color: isNsfw ? '#f87171' : 'rgba(255,255,255,0.35)',
                     boxShadow: isNsfw ? '0 0 20px -5px rgba(239,68,68,0.3)' : 'none',
-                  }}
-                >
+                  }}>
                   {isLoggedIn ? `NSFW ${isNsfw ? 'ON' : 'OFF'}` : '🔒 Login'}
                 </button>
               </div>
@@ -389,8 +367,6 @@ export default function WaifuPage() {
         )}
 
         {/* ── GRID ────────────────────────────────────────────── */}
-
-        {/* Notif fallback — tampil kalau hasil dari strategi alternatif */}
         {searchedAs && !loading && safeData.length > 0 && (
           <div className="mb-5 px-4 py-3 rounded-2xl flex items-start gap-3"
             style={{ background: 'rgba(236,72,153,0.07)', border: '1px solid rgba(236,72,153,0.15)' }}>
@@ -415,17 +391,12 @@ export default function WaifuPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {[...Array(10)].map((_, i) => (
                 <div key={i} className="aspect-[3/4] rounded-2xl animate-pulse"
-                  style={{
-                    background: 'linear-gradient(110deg,#0f1219 30%,#1a2030 50%,#0f1219 70%)',
-                    animationDelay: `${i * 60}ms`,
-                  }}
-                />
+                  style={{ background: 'linear-gradient(110deg,#0f1219 30%,#1a2030 50%,#0f1219 70%)', animationDelay: `${i * 60}ms` }} />
               ))}
             </div>
           </div>
         ) : (
           <>
-            {/* Grid biasa — item selalu ditambah ke bawah, tidak ke samping */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {safeData.map((item, i) => (
                 <WaifuCard key={`${item?.id || i}-${i}`} image={item} onCardClick={handleCardClick} />
@@ -444,8 +415,7 @@ export default function WaifuPage() {
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 px-4">
                   {['anime girl', 'zero two', 'sakura', 'mecha', 'neko'].map(sug => (
-                    <button key={sug}
-                      onClick={() => { setSearchQuery(sug); }}
+                    <button key={sug} onClick={() => { setSearchQuery(sug); }}
                       className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all active:scale-95"
                       style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)', color: '#f472b6' }}>
                       {sug}
@@ -504,63 +474,37 @@ export default function WaifuPage() {
               }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Garis aksen */}
               <div className="absolute top-0 left-0 right-0 h-[2px] z-10"
                 style={{ background: 'linear-gradient(90deg, transparent, #ec4899 40%, #f472b6 60%, transparent)' }} />
-
-              {/* Drag handle mobile */}
               <div className="md:hidden flex justify-center pt-3 absolute top-0 left-0 right-0 z-10 pointer-events-none">
                 <div className="w-8 h-1 rounded-full bg-white/15" />
               </div>
-
-              {/* Tombol tutup */}
               <button onClick={() => setSelectedImage(null)}
                 className="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-white transition-all duration-300"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                 onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(90deg)')}
-                onMouseLeave={e => (e.currentTarget.style.transform = 'rotate(0deg)')}
-              >
+                onMouseLeave={e => (e.currentTarget.style.transform = 'rotate(0deg)')}>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
 
-              {/* ── Gambar — adaptive layout ── */}
               <div
-                className={`relative flex-shrink-0 overflow-hidden ${
-                  imgRatio === 'landscape' ? 'w-full' : 'w-full md:w-[46%]'
-                }`}
+                className={`relative flex-shrink-0 overflow-hidden ${imgRatio === 'landscape' ? 'w-full' : 'w-full md:w-[46%]'}`}
                 style={{
                   background: '#06080f',
-                  // Portrait: isi tinggi penuh modal di desktop
-                  // Landscape: tinggi berdasarkan rasio gambar supaya tidak crop
-                  // Square: tinggi sedang
                   height: imgRatio === 'landscape'
                     ? 'clamp(200px, 56vw, 480px)'
                     : imgRatio === 'square'
                     ? 'clamp(260px, 46vw, 100%)'
                     : 'clamp(280px, 55vw, 100%)',
-                }}
-              >
-                {/* Background blur placeholder */}
-                <Image
-                  src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`}
-                  alt=""
-                  fill
-                  className="object-cover scale-110 blur-xl opacity-30"
-                  unoptimized
-                  aria-hidden
-                />
-                {/* Gambar utama — object-contain supaya tidak crop, tapi background tetap gelap */}
-                <Image
-                  src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`}
-                  alt={selectedImage.title}
-                  fill
-                  className="object-contain relative z-10"
-                  style={{ filter: 'drop-shadow(0 4px 32px rgba(0,0,0,0.6))' }}
-                  unoptimized
-                />
-                {/* Stats kiri bawah */}
+                }}>
+                <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt=""
+                  fill className="object-cover scale-110 blur-xl opacity-30" unoptimized aria-hidden />
+                <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt={selectedImage.title}
+                  fill className="object-contain relative z-10"
+                  style={{ filter: 'drop-shadow(0 4px 32px rgba(0,0,0,0.6))' }} unoptimized />
+
                 {(selectedImage.favorites > 0 || selectedImage.views > 0) && (
                   <div className="absolute bottom-3 left-3 flex gap-2 z-20">
                     {selectedImage.favorites > 0 && (
@@ -584,17 +528,10 @@ export default function WaifuPage() {
                   </div>
                 )}
 
-                {/* Tombol fullscreen — pojok kanan bawah gambar */}
-                <button
-                  onClick={() => setIsFullscreen(true)}
+                <button onClick={() => setIsFullscreen(true)}
                   className="absolute bottom-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 active:scale-90 hover:scale-110"
-                  style={{
-                    background: 'rgba(0,0,0,0.65)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                  }}
-                  title="Lihat gambar penuh"
-                >
+                  style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)' }}
+                  title="Lihat gambar penuh">
                   <svg className="w-3.5 h-3.5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -602,77 +539,43 @@ export default function WaifuPage() {
                 </button>
               </div>
 
-              {/* ════ FULLSCREEN OVERLAY — tampil di dalam modal ════ */}
               {isFullscreen && (
-                <div
-                  className="absolute inset-0 z-50 flex items-center justify-center"
+                <div className="absolute inset-0 z-50 flex items-center justify-center"
                   style={{ background: 'rgba(0,0,0,0.97)', backdropFilter: 'blur(4px)' }}
-                  onClick={() => setIsFullscreen(false)}
-                >
-                  {/* Tombol tutup fullscreen */}
-                  <button
-                    onClick={e => { e.stopPropagation(); setIsFullscreen(false); }}
+                  onClick={() => setIsFullscreen(false)}>
+                  <button onClick={e => { e.stopPropagation(); setIsFullscreen(false); }}
                     className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-xl z-10 transition-all active:scale-90"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
-                  >
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
                     <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                         d="M9 9V4m0 5H4m0 0l5 5M15 9h5m-5 0V4m0 5l5-5M9 15H4m5 0v5m0-5l-5 5M15 15l5 5m-5-5v5m0-5h5" />
                     </svg>
                   </button>
-
-                  {/* Label kecil */}
-                  <p className="absolute top-4 left-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">
-                    Ketuk untuk kembali
-                  </p>
-
-                  {/* Gambar fullscreen — object-contain supaya full terlihat */}
-                  <div
-                    className="relative w-full h-full"
-                    onClick={() => setIsFullscreen(false)}
-                  >
-                    <Image
-                      src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`}
-                      alt={selectedImage.title}
-                      fill
-                      className="object-contain"
-                      style={{ padding: '48px 16px 16px' }}
-                      unoptimized
-                    />
+                  <p className="absolute top-4 left-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Ketuk untuk kembali</p>
+                  <div className="relative w-full h-full" onClick={() => setIsFullscreen(false)}>
+                    <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt={selectedImage.title}
+                      fill className="object-contain" style={{ padding: '48px 16px 16px' }} unoptimized />
                   </div>
-
-                  {/* Judul di bawah */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 text-center"
-                    style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }}
-                  >
+                  <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 text-center"
+                    style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }}>
                     <p className="text-white text-xs sm:text-sm font-bold truncate">{selectedImage.title}</p>
                     <p className="text-[10px] mt-0.5 font-medium" style={{ color: '#f472b6' }}>@{selectedImage.author}</p>
                   </div>
                 </div>
               )}
 
-              {/* ── Info panel ── */}
-              <div
-                className="flex flex-col flex-1 min-h-0 overflow-hidden"
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden"
                 style={{
                   borderLeft: imgRatio === 'landscape' ? 'none' : '1px solid rgba(255,255,255,0.05)',
                   borderTop: imgRatio === 'landscape' ? '1px solid rgba(255,255,255,0.05)' : 'none',
                   maxHeight: imgRatio === 'landscape' ? '50vh' : undefined,
-                }}
-              >
+                }}>
                 <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0">
-
-                  {/* Brand */}
                   <div className="flex items-center gap-2 pt-1">
-                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ background: '#ec4899', boxShadow: '0 0 8px #ec4899' }} />
-                    <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: '#ec4899' }}>
-                      CoreAnime · Kodel Dev
-                    </span>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#ec4899', boxShadow: '0 0 8px #ec4899' }} />
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: '#ec4899' }}>CoreAnime · Kodel Dev</span>
                   </div>
 
-                  {/* Judul & Author */}
                   <div>
                     <h2 className="text-sm sm:text-base md:text-lg font-black text-white leading-snug break-words italic" style={{ letterSpacing: '-0.02em' }}>
                       {selectedImage.title}
@@ -705,7 +608,6 @@ export default function WaifuPage() {
                     </div>
                   </div>
 
-                  {/* Stats */}
                   {(selectedImage.favorites > 0 || selectedImage.views > 0 || selectedImage.comments > 0) && (
                     <div className="flex gap-3 flex-wrap">
                       {selectedImage.favorites > 0 && (
@@ -727,7 +629,6 @@ export default function WaifuPage() {
                     </div>
                   )}
 
-                  {/* Info file */}
                   {(selectedImage.downloadWidth > 0 || selectedImage.downloadFilesize) && (
                     <div className="rounded-xl overflow-hidden text-xs" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
                       {[
@@ -736,10 +637,7 @@ export default function WaifuPage() {
                         selectedImage.downloadFilename && { icon: '📄', label: 'Nama', value: selectedImage.downloadFilename },
                       ].filter(Boolean).map((row: any, i: number) => (
                         <div key={i} className="flex items-center gap-3 px-3 sm:px-4 py-2.5"
-                          style={{
-                            background: i % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
-                            borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                          }}>
+                          style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                           <span className="text-sm flex-shrink-0">{row.icon}</span>
                           <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider flex-shrink-0 w-14">{row.label}</span>
                           <span className="text-[11px] font-medium ml-auto text-right break-all" style={{ color: 'rgba(255,255,255,0.65)' }}>{row.value}</span>
@@ -748,12 +646,11 @@ export default function WaifuPage() {
                     </div>
                   )}
 
-                  {/* Deskripsi */}
                   {isFetchingMeta ? (
                     <div className="space-y-2">
                       <div className="h-3 w-16 rounded animate-pulse" style={{ background: 'rgba(255,255,255,0.06)' }} />
                       {[...Array(3)].map((_, i) => (
-                        <div key={i} className={`h-2.5 rounded animate-pulse`}
+                        <div key={i} className="h-2.5 rounded animate-pulse"
                           style={{ background: 'rgba(255,255,255,0.04)', width: `${100 - i * 15}%` }} />
                       ))}
                     </div>
@@ -800,7 +697,6 @@ export default function WaifuPage() {
                     </div>
                   )}
 
-                  {/* Tags */}
                   {isFetchingMeta ? (
                     <div className="flex flex-wrap gap-1.5">
                       {[...Array(5)].map((_, i) => (
@@ -829,7 +725,6 @@ export default function WaifuPage() {
                   )}
                 </div>
 
-                {/* Tombol Unduh */}
                 <div className="p-3 sm:p-4 flex-shrink-0"
                   style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(8,11,18,0.9)' }}>
                   <button onClick={handleDownload} disabled={isDownloading}
@@ -839,21 +734,14 @@ export default function WaifuPage() {
                       boxShadow: isDownloading ? 'none' : '0 6px 24px -6px rgba(236,72,153,0.55)',
                     }}>
                     {isDownloading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sedang Mengunduh...
-                      </>
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sedang Mengunduh...</>
                     ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5 5-5M12 15V3" />
-                        </svg>
-                        Unduh Gambar Original
-                      </>
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5 5-5M12 15V3" />
+                      </svg>Unduh Gambar Original</>
                     )}
                   </button>
-                  <p className="mt-2 text-center text-[9px] font-bold uppercase tracking-widest"
-                    style={{ color: 'rgba(255,255,255,0.1)' }}>
+                  <p className="mt-2 text-center text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.1)' }}>
                     © CoreAnime · Kodel Dev · Visual Vault
                   </p>
                 </div>
