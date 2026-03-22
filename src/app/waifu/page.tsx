@@ -184,8 +184,7 @@ export default function WaifuPage() {
     return () => clearTimeout(t);
   }, [category, isNsfw, sortMode]);
 
-  // ── FIX: hapus "if kosong return" agar galeri reset saat search dikosongkan ──
-// Search hanya jalan saat tekan Enter atau klik tombol cari
+  // Search hanya jalan saat tekan Enter atau klik tombol cari
 
   const handleNsfwToggle = () => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
@@ -237,13 +236,13 @@ export default function WaifuPage() {
 
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 pb-16 sm:pb-20 flex-grow">
 
-        {/* ── HEADER ──────────────────────────────────────────── */}
-        <div className="relative mb-8 sm:mb-10 md:mb-12">
+        {/* ── HEADER ── */}
+        <div className="relative mb-6 sm:mb-10 md:mb-12">
           <div className="absolute -top-16 -left-10 w-72 h-72 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 70%)' }}
-          />
+            style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 70%)' }} />
 
-          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            {/* Judul */}
             <div className="space-y-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[9px] text-pink-400/70 font-black uppercase tracking-[0.3em]">CoreAnime</span>
@@ -262,17 +261,19 @@ export default function WaifuPage() {
               </p>
             </div>
 
-            <div className="flex flex-col xs:flex-row flex-wrap gap-2.5 w-full sm:w-auto sm:items-center">
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center flex-1 sm:flex-none">
+            {/* Controls — mobile: stack vertikal, desktop: row */}
+            <div className="flex flex-col gap-2 w-full sm:w-auto sm:items-end">
+              {/* Baris 1: Search bar — full width di mobile */}
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full sm:w-64 md:w-72">
                 <input
                   type="text"
-                  placeholder="Cari karakter, genre..."
+                  placeholder="Cari karakter, genre... (tekan Enter)"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-52 md:w-60 pl-4 pr-11 py-3 text-sm rounded-xl outline-none transition-all placeholder:text-gray-600"
+                  className="w-full pl-4 pr-11 py-3 text-sm rounded-xl outline-none transition-all placeholder:text-gray-600"
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
                   onFocus={e => (e.target.style.border = '1px solid rgba(236,72,153,0.5)')}
-                  onBlur={e => (e.target.style.border = '1px solid rgba(255,255,255,0.08)')}
+                  onBlur={e  => (e.target.style.border  = '1px solid rgba(255,255,255,0.08)')}
                 />
                 <button type="submit"
                   className="absolute right-2 w-7 h-7 flex items-center justify-center rounded-lg text-white transition-all active:scale-90"
@@ -283,35 +284,37 @@ export default function WaifuPage() {
                 </button>
               </form>
 
-              <div className="flex gap-2.5 items-center">
-                <div className="relative flex-1 sm:flex-none" ref={dropdownRef}>
+              {/* Baris 2: Filter chips — scroll horizontal di mobile */}
+              <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                {/* Dropdown Kategori */}
+                <div className="relative flex-shrink-0" ref={dropdownRef}>
                   <button type="button" onClick={() => setIsDropdownOpen(v => !v)}
-                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between gap-2 transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 whitespace-nowrap"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <span className="truncate">{GENRES.find(g => g.id === category)?.label}</span>
-                    <svg className="w-4 h-4 flex-shrink-0 transition-transform duration-300"
+                    <span className="max-w-[120px] truncate">{GENRES.find(g => g.id === category)?.label}</span>
+                    <svg className="w-3.5 h-3.5 opacity-50 flex-shrink-0 transition-transform duration-200"
                       style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-full sm:w-48 rounded-2xl overflow-hidden z-50"
+                    <div className="absolute top-full left-0 mt-2 w-52 rounded-2xl overflow-hidden z-50"
                       style={{
-                        background: 'rgba(10,14,22,0.98)',
+                        background: 'rgba(8,11,18,0.98)',
                         border: '1px solid rgba(255,255,255,0.08)',
-                        backdropFilter: 'blur(20px)',
-                        boxShadow: '0 20px 60px -10px rgba(0,0,0,0.8)',
+                        backdropFilter: 'blur(24px)',
+                        boxShadow: '0 20px 60px -10px rgba(0,0,0,0.9)',
                       }}>
                       {GENRES.map(g => (
                         <button key={g.id} type="button"
                           onClick={() => { setCategory(g.id); setSearchQuery(''); setIsDropdownOpen(false); }}
-                          className="block w-full px-5 py-3 text-left text-sm font-medium transition-colors"
+                          className="block w-full px-4 py-2.5 text-left text-sm font-medium transition-colors"
                           style={{
-                            background: category === g.id ? 'linear-gradient(135deg,rgba(236,72,153,0.2),rgba(190,24,93,0.1))' : 'transparent',
-                            color: category === g.id ? '#f472b6' : 'rgba(255,255,255,0.7)',
-                            borderLeft: category === g.id ? '2px solid #ec4899' : '2px solid transparent',
+                            background:  category === g.id ? 'rgba(236,72,153,0.12)' : 'transparent',
+                            color:       category === g.id ? '#f472b6' : 'rgba(255,255,255,0.7)',
+                            borderLeft:  category === g.id ? '2px solid #ec4899' : '2px solid transparent',
                           }}
                           onMouseEnter={e => { if (category !== g.id) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                           onMouseLeave={e => { if (category !== g.id) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -321,39 +324,41 @@ export default function WaifuPage() {
                   )}
                 </div>
 
-                <div className="flex rounded-xl overflow-hidden"
+                {/* Sort toggle */}
+                <div className="flex rounded-xl overflow-hidden flex-shrink-0"
                   style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
                   {(['newest', 'popular'] as const).map(mode => (
                     <button key={mode} type="button" onClick={() => setSortMode(mode)}
-                      className="px-3 py-3 text-[9px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 whitespace-nowrap"
+                      className="px-3 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 whitespace-nowrap"
                       style={{
-                        background: sortMode === mode ? 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(190,24,93,0.15))' : 'transparent',
-                        color: sortMode === mode ? '#f472b6' : 'rgba(255,255,255,0.3)',
+                        background:  sortMode === mode ? 'linear-gradient(135deg,rgba(236,72,153,0.25),rgba(190,24,93,0.15))' : 'transparent',
+                        color:       sortMode === mode ? '#f472b6' : 'rgba(255,255,255,0.3)',
                         borderRight: mode === 'newest' ? '1px solid rgba(255,255,255,0.06)' : 'none',
                       }}>
-                      {mode === 'newest' ? '🆕 Terbaru' : '🔥 Populer'}
+                      {mode === 'newest' ? '🆕 Baru' : '🔥 Top'}
                     </button>
                   ))}
                 </div>
 
+                {/* NSFW toggle */}
                 <button type="button" onClick={handleNsfwToggle}
-                  className="px-3 sm:px-4 py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 whitespace-nowrap"
+                  className="px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 whitespace-nowrap flex-shrink-0"
                   style={{
                     background: isNsfw ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)',
-                    border: isNsfw ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(255,255,255,0.08)',
-                    color: isNsfw ? '#f87171' : 'rgba(255,255,255,0.35)',
-                    boxShadow: isNsfw ? '0 0 20px -5px rgba(239,68,68,0.3)' : 'none',
+                    border:     isNsfw ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                    color:      isNsfw ? '#f87171' : 'rgba(255,255,255,0.35)',
+                    boxShadow:  isNsfw ? '0 0 16px -4px rgba(239,68,68,0.3)' : 'none',
                   }}>
-                  {isLoggedIn ? `NSFW ${isNsfw ? 'ON' : 'OFF'}` : '🔒 Login'}
+                  {isLoggedIn ? (isNsfw ? '🔞 ON' : 'NSFW') : '🔒'}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── ERROR ───────────────────────────────────────────── */}
+        {/* ── ERROR ── */}
         {errorMessage && (
-          <div className="mb-8 px-5 py-4 rounded-2xl text-sm text-center"
+          <div className="mb-6 px-5 py-4 rounded-2xl text-sm text-center"
             style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', color: '#fca5a5' }}>
             {errorMessage}
             {errorMessage.includes('login') && (
@@ -362,7 +367,7 @@ export default function WaifuPage() {
           </div>
         )}
 
-        {/* ── GRID ────────────────────────────────────────────── */}
+        {/* ── FALLBACK NOTIF ── */}
         {searchedAs && !loading && safeData.length > 0 && (
           <div className="mb-5 px-4 py-3 rounded-2xl flex items-start gap-3"
             style={{ background: 'rgba(236,72,153,0.07)', border: '1px solid rgba(236,72,153,0.15)' }}>
@@ -372,46 +377,45 @@ export default function WaifuPage() {
                 Hasil untuk <span className="text-white">"{searchedAs}"</span>
               </p>
               <p className="text-[10px] text-gray-500 mt-0.5">
-                Kami tidak menemukan hasil persis untuk kata kunci kamu, tapi ini yang paling mendekati. Coba kata kunci lain untuk hasil lebih spesifik!
+                Kami tidak menemukan hasil persis, tapi ini yang paling mendekati.
               </p>
             </div>
           </div>
         )}
 
+        {/* ── GRID ── */}
         {loading && safeData.length === 0 && !errorMessage ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-[10px] text-pink-400/50 font-black uppercase tracking-widest animate-pulse flex items-center gap-2">
               <span className="inline-block w-3 h-3 rounded-full border-2 border-pink-500 border-t-transparent animate-spin" />
-              {searchQuery ? `Lagi nyari "${searchQuery}" di seluruh galeri...` : 'Memuat galeri terbaik untuk kamu...'}
+              {searchQuery ? `Nyari "${searchQuery}"...` : 'Memuat galeri...'}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               {[...Array(10)].map((_, i) => (
-                <div key={i} className="aspect-[3/4] rounded-2xl animate-pulse"
+                <div key={i} className="aspect-[3/4] rounded-xl sm:rounded-2xl animate-pulse"
                   style={{ background: 'linear-gradient(110deg,#0f1219 30%,#1a2030 50%,#0f1219 70%)', animationDelay: `${i * 60}ms` }} />
               ))}
             </div>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               {safeData.map((item, i) => (
                 <WaifuCard key={`${item?.id || i}-${i}`} image={item} onCardClick={handleCardClick} />
               ))}
             </div>
 
             {safeData.length === 0 && !loading && !errorMessage && (
-              <div className="text-center py-16 sm:py-20 rounded-2xl"
+              <div className="text-center py-14 sm:py-20 rounded-2xl"
                 style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
                 <div className="text-4xl mb-3">😕</div>
-                <p className="text-white text-sm sm:text-base font-bold mb-1.5">
-                  Hmm, kami sudah coba berbagai cara tapi hasilnya tetap kosong
-                </p>
+                <p className="text-white text-sm sm:text-base font-bold mb-1.5">Hasilnya masih kosong nih</p>
                 <p className="text-gray-500 text-xs sm:text-sm px-4 mb-4 max-w-sm mx-auto">
-                  Kata kunci ini sepertinya belum ada di database kami. Coba kata yang lebih umum, seperti nama karakter anime populer atau genre.
+                  Coba kata yang lebih umum seperti nama karakter atau genre anime.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 px-4">
                   {['anime girl', 'zero two', 'sakura', 'mecha', 'neko'].map(sug => (
-                    <button key={sug} onClick={() => { setSearchQuery(sug); }}
+                    <button key={sug} onClick={() => setSearchQuery(sug)}
                       className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all active:scale-95"
                       style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)', color: '#f472b6' }}>
                       {sug}
@@ -422,13 +426,13 @@ export default function WaifuPage() {
             )}
 
             {hasMore && safeData.length > 0 && !errorMessage && (
-              <div className="mt-12 sm:mt-16 text-center">
+              <div className="mt-10 sm:mt-16 text-center">
                 <button onClick={() => fetchImages(true)} disabled={loadingMore}
                   className="px-8 sm:px-12 py-3.5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95 disabled:opacity-50"
                   style={{
                     background: loadingMore ? 'rgba(255,255,255,0.07)' : 'white',
-                    color: loadingMore ? 'rgba(255,255,255,0.5)' : '#060910',
-                    boxShadow: loadingMore ? 'none' : '0 8px 32px -8px rgba(255,255,255,0.3)',
+                    color:      loadingMore ? 'rgba(255,255,255,0.5)' : '#060910',
+                    boxShadow:  loadingMore ? 'none' : '0 8px 32px -8px rgba(255,255,255,0.3)',
                   }}>
                   {loadingMore ? (
                     <span className="flex items-center gap-2">
@@ -445,36 +449,40 @@ export default function WaifuPage() {
           </>
         )}
 
-        {/* ════════════════════════════════════════════════════
-            MODAL DETAIL — fully responsive
-        ════════════════════════════════════════════════════ */}
+        {/* ════════════ MODAL ════════════
+            Selalu flex-row di desktop (gambar kiri, info kanan)
+            flex-col di mobile (gambar atas, info bawah scroll)
+        ══════════════════════════════ */}
         {selectedImage && (
           <div
-            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4 md:p-6"
+            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-3 md:p-6"
             style={{ background: 'rgba(3,5,11,0.94)', backdropFilter: 'blur(28px)' }}
             onClick={() => setSelectedImage(null)}
           >
             <div
-              className={`relative w-full overflow-hidden ${
-                imgRatio === 'landscape'
-                  ? 'sm:max-w-[95vw] md:max-w-[860px] flex flex-col'
-                  : 'sm:max-w-[820px] flex flex-col md:flex-row'
-              }`}
+              className="relative w-full flex flex-col sm:flex-row overflow-hidden"
               style={{
                 background: 'linear-gradient(145deg, #0e1320 0%, #0a0d14 100%)',
                 border: '1px solid rgba(255,255,255,0.07)',
                 borderRadius: 'clamp(1rem,3vw,1.5rem)',
                 boxShadow: '0 40px 100px -20px rgba(236,72,153,0.18)',
+                // Lebar modal: landscape lebih lebar
+                maxWidth: imgRatio === 'landscape' ? 'min(96vw, 1020px)' : 'min(96vw, 860px)',
+                // Tinggi: mobile = 92dvh, desktop = auto (konten menentukan) tapi max 90vh
+                height: '92dvh',
                 maxHeight: '92dvh',
-                height: imgRatio === 'landscape' ? 'auto' : '92dvh',
               }}
               onClick={e => e.stopPropagation()}
             >
+              {/* Aksen atas */}
               <div className="absolute top-0 left-0 right-0 h-[2px] z-10"
                 style={{ background: 'linear-gradient(90deg, transparent, #ec4899 40%, #f472b6 60%, transparent)' }} />
-              <div className="md:hidden flex justify-center pt-3 absolute top-0 left-0 right-0 z-10 pointer-events-none">
+              {/* Drag handle mobile */}
+              <div className="sm:hidden flex justify-center pt-3 absolute top-0 left-0 right-0 z-10 pointer-events-none">
                 <div className="w-8 h-1 rounded-full bg-white/15" />
               </div>
+
+              {/* Tombol tutup */}
               <button onClick={() => setSelectedImage(null)}
                 className="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-white transition-all duration-300"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
@@ -485,56 +493,72 @@ export default function WaifuPage() {
                 </svg>
               </button>
 
+              {/* ── Panel Gambar ──
+                  Mobile: lebar penuh, tinggi terbatas (max 45% layar)
+                  Desktop portrait/square: 46% lebar, tinggi penuh
+                  Desktop landscape: 58% lebar (gambar lebih lega), tinggi penuh
+              */}
               <div
-                className={`relative flex-shrink-0 overflow-hidden ${imgRatio === 'landscape' ? 'w-full' : 'w-full md:w-[46%]'}`}
+                className="relative flex-shrink-0 overflow-hidden"
                 style={{
                   background: '#06080f',
-                  height: imgRatio === 'landscape'
-                    ? 'clamp(200px, 56vw, 480px)'
-                    : imgRatio === 'square'
-                    ? 'clamp(260px, 46vw, 100%)'
-                    : 'clamp(280px, 55vw, 100%)',
-                }}>
-                <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt=""
-                  fill className="object-cover scale-110 blur-xl opacity-30" unoptimized aria-hidden />
-                <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt={selectedImage.title}
-                  fill className="object-contain relative z-10"
-                  style={{ filter: 'drop-shadow(0 4px 32px rgba(0,0,0,0.6))' }} unoptimized />
+                  // Mobile: full width, tinggi proporsional agar info masih keliatan
+                  width: '100%',
+                  height: 'clamp(200px, 48vw, 300px)',
+                  // Desktop override via className sm:
+                }}
+              >
+                {/* Override desktop */}
+                <style>{`
+                  @media (min-width: 640px) {
+                    .modal-img-panel {
+                      width: ${imgRatio === 'landscape' ? '58%' : '46%'} !important;
+                      height: 100% !important;
+                    }
+                  }
+                `}</style>
+                <div className="modal-img-panel absolute inset-0">
+                  <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt=""
+                    fill className="object-cover scale-110 blur-xl opacity-30" unoptimized aria-hidden />
+                  <Image src={`/api/proxy?url=${encodeURIComponent(selectedImage.url)}`} alt={selectedImage.title}
+                    fill className="object-contain relative z-10"
+                    style={{ filter: 'drop-shadow(0 4px 32px rgba(0,0,0,0.6))' }} unoptimized />
 
-                {(selectedImage.favorites > 0 || selectedImage.views > 0) && (
-                  <div className="absolute bottom-3 left-3 flex gap-2 z-20">
-                    {selectedImage.favorites > 0 && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
-                        style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', color: '#f472b6' }}>
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        {selectedImage.favorites}
-                      </div>
-                    )}
-                    {selectedImage.views > 0 && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
-                        style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                        {selectedImage.views > 999 ? `${(selectedImage.views / 1000).toFixed(1)}k` : selectedImage.views}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {(selectedImage.favorites > 0 || selectedImage.views > 0) && (
+                    <div className="absolute bottom-3 left-3 flex gap-2 z-20">
+                      {selectedImage.favorites > 0 && (
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
+                          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', color: '#f472b6' }}>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                          </svg>
+                          {selectedImage.favorites}
+                        </div>
+                      )}
+                      {selectedImage.views > 0 && (
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
+                          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                          {selectedImage.views > 999 ? `${(selectedImage.views / 1000).toFixed(1)}k` : selectedImage.views}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                <button onClick={() => setIsFullscreen(true)}
-                  className="absolute bottom-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 active:scale-90 hover:scale-110"
-                  style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)' }}
-                  title="Lihat gambar penuh">
-                  <svg className="w-3.5 h-3.5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                </button>
+                  <button onClick={() => setIsFullscreen(true)}
+                    className="absolute bottom-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 active:scale-90 hover:scale-110"
+                    style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                    <svg className="w-3.5 h-3.5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
+              {/* Fullscreen overlay */}
               {isFullscreen && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center"
                   style={{ background: 'rgba(0,0,0,0.97)', backdropFilter: 'blur(4px)' }}
@@ -560,13 +584,11 @@ export default function WaifuPage() {
                 </div>
               )}
 
+              {/* ── Info panel — SELALU tampil (kanan desktop, bawah mobile) ── */}
               <div className="flex flex-col flex-1 min-h-0 overflow-hidden"
-                style={{
-                  borderLeft: imgRatio === 'landscape' ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                  borderTop: imgRatio === 'landscape' ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                  maxHeight: imgRatio === 'landscape' ? '50vh' : undefined,
-                }}>
+                style={{ borderLeft: '1px solid rgba(255,255,255,0.05)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                 <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0">
+
                   <div className="flex items-center gap-2 pt-1">
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#ec4899', boxShadow: '0 0 8px #ec4899' }} />
                     <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: '#ec4899' }}>CoreAnime · Kodel Dev</span>
@@ -721,13 +743,14 @@ export default function WaifuPage() {
                   )}
                 </div>
 
+                {/* Tombol Unduh */}
                 <div className="p-3 sm:p-4 flex-shrink-0"
                   style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(8,11,18,0.9)' }}>
                   <button onClick={handleDownload} disabled={isDownloading}
                     className="w-full py-3 sm:py-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest text-white transition-all active:scale-[0.97] flex items-center justify-center gap-2 disabled:opacity-60"
                     style={{
                       background: isDownloading ? 'rgba(236,72,153,0.35)' : 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-                      boxShadow: isDownloading ? 'none' : '0 6px 24px -6px rgba(236,72,153,0.55)',
+                      boxShadow:  isDownloading ? 'none' : '0 6px 24px -6px rgba(236,72,153,0.55)',
                     }}>
                     {isDownloading ? (
                       <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sedang Mengunduh...</>
@@ -750,6 +773,8 @@ export default function WaifuPage() {
       <Footer />
 
       <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes coreModalIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes coreSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
